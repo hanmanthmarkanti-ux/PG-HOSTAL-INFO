@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PG Hostels in Telangana | Find Your Perfect Stay</title>
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div>
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-brand"><i class="fas fa-home"></i><span>PG Finder</span></div>
+        <div class="nav-credit">by <strong>Niat Student</strong></div>
+        <div class="nav-links">
+            <a href="#search" class="nav-link active">Search</a>
+            <a href="#" class="nav-link" onclick="showFavorites(); return false;"><i class="fas fa-heart"></i> Saved</a>
+            <a href="#" class="nav-link" onclick="showCompare(); return false;"><i class="fas fa-scale-balanced"></i> Compare</a>
+        </div>
+    </nav>
+
+    <header class="hero" id="search">
+        <div class="hero-content">
+            <div class="hero-badge reveal"><i class="fas fa-star"></i> Trusted by 10,000+ Students</div>
+            <h1 class="hero-title reveal">Find Your <span class="gradient-text">Perfect PG</span> in Telangana</h1>
+            <p class="hero-subtitle reveal">Discover premium paying guest hostels with verified reviews, real photos, and instant booking</p>
+
+            <div class="search-container reveal">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search by name, area, or city..." />
+                    <button id="searchBtn" class="btn-primary"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                <button id="locateBtn" class="btn-location"><i class="fas fa-location-crosshairs"></i><span>Use My Location</span></button>
+            </div>
+
+            <div class="filters-container reveal">
+                <div class="filter-group">
+                    <label><i class="fas fa-ruler"></i> Distance</label>
+                    <select id="distanceFilter" class="filter-select">
+                        <option value="5">Within 5 km</option>
+                        <option value="10">Within 10 km</option>
+                        <option value="25">Within 25 km</option>
+                        <option value="50" selected>Within 50 km</option>
+                        <option value="100">Within 100 km</option>
+                        <option value="500">All Telangana</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-city"></i> City</label>
+                    <select id="cityFilter" class="filter-select">
+                        <option value="all">All Cities</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Warangal">Warangal</option>
+                        <option value="Karimnagar">Karimnagar</option>
+                        <option value="Nizamabad">Nizamabad</option>
+                        <option value="Khammam">Khammam</option>
+                        <option value="Nalgonda">Nalgonda</option>
+                        <option value="Mahbubnagar">Mahbubnagar</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-sort"></i> Sort By</label>
+                    <select id="sortFilter" class="filter-select">
+                        <option value="relevance">Relevance</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="rating">Rating: High to Low</option>
+                        <option value="distance">Distance: Nearest</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-wallet"></i> Budget (₹/month)</label>
+                    <div class="price-range-container">
+                        <input type="range" id="priceMin" min="1000" max="30000" value="1000" class="price-range">
+                        <input type="range" id="priceMax" min="1000" max="30000" value="30000" class="price-range">
+                        <div class="price-labels">
+                            <span id="priceMinLabel">₹1,000</span>
+                            <span id="priceMaxLabel">₹30,000</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-concierge-bell"></i> Amenities</label>
+                    <div class="amenities-filter">
+                        <label class="amenity-checkbox"><input type="checkbox" value="WiFi" class="amenity-check"> WiFi</label>
+                        <label class="amenity-checkbox"><input type="checkbox" value="AC" class="amenity-check"> AC</label>
+                        <label class="amenity-checkbox"><input type="checkbox" value="Meals" class="amenity-check"> Meals</label>
+                        <label class="amenity-checkbox"><input type="checkbox" value="Gym" class="amenity-check"> Gym</label>
+                        <label class="amenity-checkbox"><input type="checkbox" value="Laundry" class="amenity-check"> Laundry</label>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-venus-mars"></i> Gender</label>
+                    <select id="genderFilter" class="filter-select">
+                        <option value="all">All</option>
+                        <option value="Male">Boys</option>
+                        <option value="Female">Girls</option>
+                        <option value="Unisex">Unisex</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-check-circle"></i> Availability</label>
+                    <select id="availabilityFilter" class="filter-select">
+                        <option value="all">All</option>
+                        <option value="available">Available</option>
+                        <option value="limited">Limited</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="stats-bar reveal">
+                <div class="stat-item"><span class="stat-number" data-count="250">0</span><span class="stat-plus">+</span><span class="stat-label">PG Hostels</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-item"><span class="stat-number" data-count="7">0</span><span class="stat-label">Cities</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-item"><span class="stat-number" data-count="50">0</span><span class="stat-plus">+</span><span class="stat-label">Areas Covered</span></div>
+            </div>
+        </div>
+        <div class="hero-wave">
+            <svg viewBox="0 0 1440 120" fill="none"><path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white"/></svg>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2 class="section-title">Featured PG Hostels</h2>
+                <p class="section-subtitle" id="resultCount">Showing all PG hostels</p>
+            </div>
+            <div id="pgGrid" class="pg-grid"></div>
+        </div>
+    </main>
+
+    <!-- Compare Modal -->
+    <div id="compareModal" class="modal" style="display:none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="fas fa-scale-balanced"></i> Compare PGs</h2>
+                <button class="modal-close" onclick="closeCompare()">&times;</button>
+            </div>
+            <div id="compareContent" class="compare-content"></div>
+        </div>
+    </div>
+
+    <!-- Favorites Modal -->
+    <div id="favoritesModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-heart"></i> Saved PGs</h2>
+                <button class="modal-close" onclick="closeFavorites()">&times;</button>
+            </div>
+            <div id="favoritesContent" class="favorites-content"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand"><i class="fas fa-home"></i><span>PG Finder Telangana</span></div>
+            <p class="footer-text">Find your perfect paying guest accommodation across Telangana</p>
+            <div class="footer-links">
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-facebook"></i></a>
+            </div>
+            <p class="footer-credit">Made with <i class="fas fa-heart" style="color:#ef4444;"></i> by <strong>Niat Student</strong></p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="pgdata.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
