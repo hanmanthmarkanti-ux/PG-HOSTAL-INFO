@@ -140,7 +140,7 @@ This project is open source and available for educational purposes.
 
 ## 👨‍💻 Author
 
-**Niat Student**
+**HANMANTH**
 - GitHub: [@hanmanthmarkanti-ux](https://github.com/hanmanthmarkanti-ux)
 
 ## 🤝 Contributing
@@ -158,4 +158,4 @@ If you found this helpful, please give it a ⭐ on GitHub!
 
 ---
 
-Made with ❤️ by **Niat Student**
+Made with ❤️ by **HANMANTH**
