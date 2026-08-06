@@ -46,12 +46,17 @@ body {
     background: var(--primary);
     border-radius: 50%;
     opacity: 0.15;
-    animation: float 30s infinite ease-in-out;
+    animation: float 20s infinite ease-in-out;
 }
 
-.particle:nth-child(1) { left: 20%; animation-delay: 0s; }
-.particle:nth-child(2) { left: 50%; animation-delay: 5s; }
-.particle:nth-child(3) { left: 80%; animation-delay: 10s; }
+.particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 18s; }
+.particle:nth-child(2) { left: 20%; animation-delay: 2s; animation-duration: 22s; }
+.particle:nth-child(3) { left: 35%; animation-delay: 4s; animation-duration: 20s; }
+.particle:nth-child(4) { left: 50%; animation-delay: 1s; animation-duration: 24s; }
+.particle:nth-child(5) { left: 65%; animation-delay: 3s; animation-duration: 19s; }
+.particle:nth-child(6) { left: 75%; animation-delay: 5s; animation-duration: 21s; }
+.particle:nth-child(7) { left: 85%; animation-delay: 2.5s; animation-duration: 23s; }
+.particle:nth-child(8) { left: 95%; animation-delay: 4.5s; animation-duration: 17s; }
 
 @keyframes float {
     0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
@@ -855,9 +860,14 @@ html {
     to { transform: scale(4); opacity: 0; }
 }
 
-/* Card 3D Tilt - simplified */
+/* Card 3D Tilt */
+.pg-card {
+    transform-style: preserve-3d;
+    perspective: 1000px;
+}
+
 .pg-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-12px) rotateX(2deg) rotateY(-2deg);
 }
 
 /* Text Gradient Animation */
@@ -1075,9 +1085,24 @@ body {
 .pg-card:nth-child(5) { animation-delay: 0.25s; }
 .pg-card:nth-child(6) { animation-delay: 0.3s; }
 
-/* Glow Effect on Hover - simplified */
-.pg-card:hover {
-    box-shadow: 0 12px 40px rgba(99,102,241,0.2);
+/* Glow Effect on Hover */
+.pg-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.4s;
+    box-shadow: 0 0 30px rgba(99,102,241,0.3);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.pg-card:hover::after {
+    opacity: 1;
 }
 
 /* Modal Backdrop Blur */

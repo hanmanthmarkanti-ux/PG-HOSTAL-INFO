@@ -2,22 +2,16 @@ var userLocation = null;
 var favorites = JSON.parse(localStorage.getItem('pgFavorites') || '[]');
 var compareList = JSON.parse(localStorage.getItem('pgCompare') || '[]');
 
-// Scroll Progress Bar - throttled
+// Scroll Progress Bar
 var scrollProgress = document.createElement('div');
 scrollProgress.className = 'scroll-progress';
 document.body.prepend(scrollProgress);
 
-var scrollTicking = false;
 window.addEventListener('scroll', function() {
-    if (!scrollTicking) {
-        window.requestAnimationFrame(function() {
-            var scrollTop = window.scrollY;
-            var docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            scrollProgress.style.width = ((scrollTop / docHeight) * 100) + '%';
-            scrollTicking = false;
-        });
-        scrollTicking = true;
-    }
+    var scrollTop = window.scrollY;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = (scrollTop / docHeight) * 100;
+    scrollProgress.style.width = progress + '%';
 });
 
 // Ripple Effect
@@ -61,13 +55,15 @@ function animateCounters() {
     });
 }
 
-// Card animation - lightweight
+// Card animation
 function animateCards() {
-    var cards = document.querySelectorAll('.pg-card');
-    for (var i = 0; i < cards.length; i++) {
-        cards[i].style.opacity = '1';
-        cards[i].style.transform = 'translateY(0)';
-    }
+    document.querySelectorAll('.pg-card').forEach(function(card, i) {
+        card.style.opacity = '0'; card.style.transform = 'translateY(30px)';
+        setTimeout(function() {
+            card.style.transition = 'all 0.5s cubic-bezier(0.25,0.46,0.45,0.94)';
+            card.style.opacity = '1'; card.style.transform = 'translateY(0)';
+        }, i * 60);
+    });
 }
 
 function slugify(text) {
@@ -293,17 +289,10 @@ document.getElementById('priceMax').addEventListener('input', function() {
     searchAndRender();
 });
 
-// Debounce search
-var searchTimeout;
-function debounceSearch() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(searchAndRender, 300);
-}
-
 // Event listeners
 document.getElementById('searchBtn').addEventListener('click', searchAndRender);
 document.getElementById('searchInput').addEventListener('keyup', function(e) { if (e.key === 'Enter') searchAndRender(); });
-document.getElementById('searchInput').addEventListener('input', debounceSearch);
+document.getElementById('searchInput').addEventListener('input', searchAndRender);
 document.getElementById('distanceFilter').addEventListener('change', searchAndRender);
 document.getElementById('cityFilter').addEventListener('change', searchAndRender);
 document.getElementById('sortFilter').addEventListener('change', searchAndRender);
@@ -311,7 +300,7 @@ document.getElementById('genderFilter').addEventListener('change', searchAndRend
 document.getElementById('availabilityFilter').addEventListener('change', searchAndRender);
 document.querySelectorAll('.amenity-check').forEach(function(cb) { cb.addEventListener('change', searchAndRender); });
 
-window.addEventListener('scroll', function() { reveal(); handleNavScroll(); }, { passive: true });
+window.addEventListener('scroll', function() { reveal(); handleNavScroll(); });
 window.addEventListener('load', function() { reveal(); animateCounters(); searchAndRender(); });
 
 // Close modals on outside click
