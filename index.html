@@ -23,6 +23,15 @@
             <a href="#search" class="nav-link active">Search</a>
             <a href="#" class="nav-link" onclick="showFavorites(); return false;"><i class="fas fa-heart"></i> Saved</a>
             <a href="#" class="nav-link" onclick="showCompare(); return false;"><i class="fas fa-scale-balanced"></i> Compare</a>
+            <div id="authBtns" class="auth-buttons">
+                <button class="btn-auth btn-login" onclick="showAuthModal('login')">Login</button>
+                <button class="btn-auth btn-register" onclick="showAuthModal('register')">Register</button>
+            </div>
+            <div id="userMenu" class="user-menu" style="display:none;">
+                <span class="user-greeting"><i class="fas fa-user-circle"></i> <span id="userName"></span></span>
+                <a href="admin.html" class="btn-admin" title="Admin Panel"><i class="fas fa-cog"></i></a>
+                <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
         </div>
     </nav>
 
@@ -158,6 +167,53 @@
                 <button class="modal-close" onclick="closeFavorites()">&times;</button>
             </div>
             <div id="favoritesContent" class="favorites-content"></div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal" style="display:none;">
+        <div class="modal-content modal-auth">
+            <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+
+            <div id="loginForm" class="auth-form">
+                <h2><i class="fas fa-sign-in-alt"></i> Login</h2>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPass" required placeholder="Enter password">
+                    </div>
+                    <button type="submit" class="btn-submit btn-full">Login</button>
+                </form>
+                <p class="auth-switch">Don't have an account? <a href="#" onclick="showAuthModal('register'); return false;">Register</a></p>
+            </div>
+
+            <div id="registerForm" class="auth-form" style="display:none;">
+                <h2><i class="fas fa-user-plus"></i> Register</h2>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="regName" required placeholder="Your name">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="regEmail" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="regPhone" placeholder="+91 XXXXX XXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="regPass" required minlength="6" placeholder="Min 6 characters">
+                    </div>
+                    <button type="submit" class="btn-submit btn-full">Create Account</button>
+                </form>
+                <p class="auth-switch">Already have an account? <a href="#" onclick="showAuthModal('login'); return false;">Login</a></p>
+            </div>
         </div>
     </div>
 
