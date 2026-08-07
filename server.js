@@ -18,7 +18,7 @@ const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 app.use('/uploads', express.static(uploadsDir));
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(__dirname));
 
 const { auth } = require('./middleware/auth');
 app.use(auth);
@@ -32,7 +32,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 app.get('*', (req, res) => {
     if (!req.path.startsWith('/api') && !req.path.includes('.')) {
-        res.sendFile(path.join(__dirname, '..', 'index.html'));
+        res.sendFile(path.join(__dirname, 'index.html'));
     }
 });
 
