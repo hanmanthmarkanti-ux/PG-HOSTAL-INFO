@@ -3,8 +3,6 @@ const createTables = require('./config/schema');
 
 async function seed() {
     try {
-        await initDb();
-        await createTables();
         const db = getDb();
 
         const existing = db.exec("SELECT COUNT(*) as count FROM pgs");
@@ -14,7 +12,7 @@ async function seed() {
         }
 
         console.log('Seeding data...');
-        const allPGHostels = require('../pgdata').allPGHostels || {};
+        const { allPGHostels } = require('../pgdata');
 
         const pgEntries = Object.entries(allPGHostels);
         let count = 0;
@@ -52,9 +50,15 @@ async function seed() {
 
         saveDb();
         console.log('Seeded ' + count + ' PGs');
+        return count;
     } catch(e) {
         console.error('Seed error:', e.message);
+        return 0;
     }
 }
 
-seed().then(() => process.exit(0)).catch(() => process.exit(0));
+if (require.main === module) {
+    initDb().then(() => createTables()).then(() => seed()).then(() => process.exit(0)).catch(() => process.exit(0));
+}
+
+module.exports = seed;
