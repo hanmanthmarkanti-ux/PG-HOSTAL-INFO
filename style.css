@@ -1520,3 +1520,130 @@ body {
     text-decoration: none;
 }
 .auth-switch a:hover { text-decoration: underline; }
+
+/* Sector Cards */
+.sector-section {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    margin: 40px auto 20px;
+    max-width: 700px;
+}
+.sector-card {
+    flex: 1;
+    padding: 32px 24px;
+    border-radius: 20px;
+    text-align: center;
+    text-decoration: none;
+    color: #1e293b;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255,255,255,0.25);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+.sector-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.sector-student { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(6,182,212,0.2)); }
+.sector-owner { background: linear-gradient(135deg, rgba(245,87,108,0.2), rgba(240,147,251,0.2)); }
+.sector-icon {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 1.8rem;
+    color: white;
+}
+.sector-student .sector-icon { background: var(--gradient); }
+.sector-owner .sector-icon { background: var(--gradient-2); }
+.sector-card h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: #fff; }
+.sector-card p { font-size: 0.85rem; color: rgba(255,255,255,0.8); margin-bottom: 16px; }
+.sector-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 20px;
+    border-radius: 10px;
+    font-size: 0.9rem; font-weight: 600;
+    color: white;
+    transition: all 0.3s;
+}
+.sector-student .sector-btn { background: var(--primary); }
+.sector-owner .sector-btn { background: #f5576c; }
+.sector-card:hover .sector-btn { transform: translateX(4px); }
+
+/* User Type Selector */
+.user-type-selector {
+    display: flex; gap: 12px; margin-bottom: 8px;
+}
+.user-type-option { flex: 1; cursor: pointer; }
+.user-type-option input { display: none; }
+.user-type-card {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 16px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.85rem; font-weight: 600;
+    color: #64748b;
+    transition: all 0.3s;
+}
+.user-type-card i { font-size: 1.3rem; }
+.user-type-option input:checked + .sector-student .sector-card,
+.user-type-option input:checked + .user-type-card {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(99,102,241,0.05);
+}
+
+/* Owner Dashboard */
+.owner-header {
+    background: var(--gradient-2);
+    color: white;
+    padding: 40px 24px;
+    text-align: center;
+}
+.owner-header h1 { font-size: 2rem; margin-bottom: 8px; }
+.owner-header p { opacity: 0.9; }
+.owner-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    max-width: 600px; margin: -30px auto 24px;
+    padding: 0 24px;
+}
+.owner-stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+}
+.owner-stat-card .stat-num { font-size: 2rem; font-weight: 800; color: var(--primary); }
+.owner-stat-card .stat-lbl { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+.owner-section {
+    max-width: 1100px; margin: 24px auto; padding: 0 24px;
+}
+.owner-section h2 {
+    font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+}
+.pg-table {
+    width: 100%; border-collapse: collapse;
+    background: white; border-radius: 12px; overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+.pg-table th, .pg-table td { padding: 12px 16px; text-align: left; font-size: 0.9rem; }
+.pg-table th { background: #f1f5f9; font-weight: 600; color: #475569; }
+.pg-table tr:hover { background: #f8fafc; }
+.pg-table .status-badge {
+    display: inline-block; padding: 4px 10px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 600;
+}
+.badge-pending { background: #fef3c7; color: #92400e; }
+.badge-confirmed { background: #d1fae5; color: #065f46; }
+.badge-cancelled { background: #fee2e2; color: #991b1b; }
+.badge-paid { background: #d1fae5; color: #065f46; }
+.badge-unpaid { background: #fef3c7; color: #92400e; }
+
+@media (max-width: 640px) {
+    .sector-section { flex-direction: column; }
+    .owner-stats { grid-template-columns: 1fr; }
+}

@@ -27,6 +27,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/pgs', require('./routes/pgs'));
 app.use('/api/inquiries', require('./routes/inquiries'));
 app.use('/api/favorites', require('./routes/favorites'));
+app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/owner', require('./routes/owner'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 

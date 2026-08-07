@@ -5,12 +5,13 @@ class PG {
         const result = run(
             `INSERT INTO pgs (slug, name, city, area, full_address, lat, lng, gender, type,
             price_min, price_max, deposit, lock_in, notice_period, food_type, wifi_speed,
-            phone, whatsapp, email, description, is_available)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            phone, whatsapp, email, description, is_available, owner_id, total_rooms, available_rooms)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [data.slug, data.name, data.city, data.area, data.full_address, data.lat, data.lng,
             data.gender, data.type, data.price_min, data.price_max, data.deposit, data.lock_in,
             data.notice_period, data.food_type, data.wifi_speed, data.phone, data.whatsapp,
-            data.email, data.description, data.is_available || 1]
+            data.email, data.description, data.is_available || 1, data.owner_id || null,
+            data.total_rooms || 0, data.available_rooms || 0]
         );
         return { id: result.lastInsertRowid, ...data };
     }
@@ -26,6 +27,7 @@ class PG {
         if (filters.is_available !== undefined) { query += ' AND is_available = ?'; params.push(filters.is_available); }
         if (filters.price_min) { query += ' AND price_max >= ?'; params.push(filters.price_min); }
         if (filters.price_max) { query += ' AND price_min <= ?'; params.push(filters.price_max); }
+        if (filters.owner_id) { query += ' AND owner_id = ?'; params.push(filters.owner_id); }
         if (filters.search) {
             query += ' AND (name LIKE ? OR area LIKE ? OR city LIKE ?)';
             const s = `%${filters.search}%`;
@@ -43,8 +45,10 @@ class PG {
 
     static getAmenities(pgId) { return queryAll('SELECT amenity FROM pg_amenities WHERE pg_id = ?', [pgId]).map(r => r.amenity); }
     static addAmenities(pgId, amenities) { amenities.forEach(a => run('INSERT INTO pg_amenities (pg_id, amenity) VALUES (?, ?)', [pgId, a])); }
+    static deleteAmenities(pgId) { run('DELETE FROM pg_amenities WHERE pg_id = ?', [pgId]); }
     static getPhotos(pgId) { return queryAll('SELECT * FROM pg_photos WHERE pg_id = ? ORDER BY is_primary DESC', [pgId]); }
     static addPhotos(pgId, photos) { photos.forEach((url, i) => run('INSERT INTO pg_photos (pg_id, photo_url, is_primary) VALUES (?, ?, ?)', [pgId, url, i === 0 ? 1 : 0])); }
+    static deletePhotos(pgId) { run('DELETE FROM pg_photos WHERE pg_id = ?', [pgId]); }
     static getRoomPrices(pgId) { return queryAll('SELECT * FROM room_prices WHERE pg_id = ?', [pgId]); }
     static addRoomPrices(pgId, prices) {
         Object.entries(prices).forEach(([roomType, price]) => {
@@ -52,10 +56,13 @@ class PG {
             if (p) run('INSERT INTO room_prices (pg_id, room_type, price) VALUES (?, ?, ?)', [pgId, roomType, p]);
         });
     }
+    static deleteRoomPrices(pgId) { run('DELETE FROM room_prices WHERE pg_id = ?', [pgId]); }
     static getFoodMenu(pgId) { return queryAll('SELECT * FROM food_menu WHERE pg_id = ?', [pgId]); }
     static addFoodMenu(pgId, meals) { meals.forEach(m => run('INSERT INTO food_menu (pg_id, meal_type, items, timing) VALUES (?, ?, ?, ?)', [pgId, m.meal_type, m.items, m.timing])); }
+    static deleteFoodMenu(pgId) { run('DELETE FROM food_menu WHERE pg_id = ?', [pgId]); }
     static getHouseRules(pgId) { return queryAll('SELECT rule FROM house_rules WHERE pg_id = ?', [pgId]).map(r => r.rule); }
     static addHouseRules(pgId, rules) { rules.forEach(r => run('INSERT INTO house_rules (pg_id, rule) VALUES (?, ?)', [pgId, r])); }
+    static deleteHouseRules(pgId) { run('DELETE FROM house_rules WHERE pg_id = ?', [pgId]); }
     static getReviews(pgId) { return queryAll('SELECT r.*, u.name as user_name FROM reviews r LEFT JOIN users u ON r.user_id = u.id WHERE r.pg_id = ? ORDER BY r.created_at DESC', [pgId]); }
     static addReview(pgId, userId, reviewerName, rating, comment) {
         const result = run('INSERT INTO reviews (pg_id, user_id, reviewer_name, rating, comment) VALUES (?, ?, ?, ?, ?)', [pgId, userId, reviewerName, rating, comment]);
@@ -77,7 +84,24 @@ class PG {
         const total = queryOne('SELECT COUNT(*) as count FROM pgs');
         const cities = queryOne('SELECT COUNT(DISTINCT city) as count FROM pgs');
         const reviews = queryOne('SELECT COUNT(*) as count FROM reviews');
-        return { totalPGs: total?.count || 0, totalCities: cities?.count || 0, totalReviews: reviews?.count || 0 };
+        const owners = queryOne("SELECT COUNT(*) as count FROM users WHERE user_type = 'owner'");
+        const students = queryOne("SELECT COUNT(*) as count FROM users WHERE user_type = 'student'");
+        const bookings = queryOne('SELECT COUNT(*) as count FROM bookings');
+        return {
+            totalPGs: total?.count || 0, totalCities: cities?.count || 0,
+            totalReviews: reviews?.count || 0, totalOwners: owners?.count || 0,
+            totalStudents: students?.count || 0, totalBookings: bookings?.count || 0
+        };
+    }
+    static getOwnerStats(ownerId) {
+        const totalPGs = queryOne('SELECT COUNT(*) as count FROM pgs WHERE owner_id = ?', [ownerId]);
+        const totalBookings = queryOne('SELECT COUNT(*) as count FROM bookings b JOIN pgs p ON b.pg_id = p.id WHERE p.owner_id = ?', [ownerId]);
+        const totalInquiries = queryOne('SELECT COUNT(*) as count FROM inquiries i JOIN pgs p ON i.pg_id = p.id WHERE p.owner_id = ?', [ownerId]);
+        return {
+            totalPGs: totalPGs?.count || 0,
+            totalBookings: totalBookings?.count || 0,
+            totalInquiries: totalInquiries?.count || 0
+        };
     }
 }
 

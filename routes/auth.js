@@ -6,17 +6,16 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Generate JWT Token
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE || '7d' });
 };
 
-// POST /api/auth/register
 router.post('/register', [
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    body('phone').optional().isMobilePhone()
+    body('phone').optional().isMobilePhone(),
+    body('user_type').optional().isIn(['student', 'owner']).withMessage('Invalid user type')
 ], async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -24,14 +23,14 @@ router.post('/register', [
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { name, email, phone, password } = req.body;
+        const { name, email, phone, password, user_type, business_name, business_address } = req.body;
 
         const existingUser = await User.findByEmail(email);
         if (existingUser) {
             return res.status(400).json({ error: 'Email already registered' });
         }
 
-        const user = await User.create({ name, email, phone, password });
+        const user = await User.create({ name, email, phone, password, user_type, business_name, business_address });
         const token = generateToken(user.id);
 
         res.status(201).json({ token, user });
@@ -40,7 +39,6 @@ router.post('/register', [
     }
 });
 
-// POST /api/auth/login
 router.post('/login', [
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').notEmpty().withMessage('Password is required')
@@ -72,7 +70,9 @@ router.post('/login', [
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                role: user.role
+                role: user.role,
+                user_type: user.user_type,
+                business_name: user.business_name
             }
         });
     } catch (error) {
@@ -80,9 +80,19 @@ router.post('/login', [
     }
 });
 
-// GET /api/auth/me
 router.get('/me', requireAuth, async (req, res) => {
     res.json({ user: req.user });
+});
+
+router.get('/users', requireAuth, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+    try {
+        const User = require('../models/User');
+        const users = User.getAll(req.query);
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
 module.exports = router;

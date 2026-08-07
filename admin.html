@@ -267,6 +267,8 @@
                 <a href="#" class="active" onclick="showTab('dashboard'); return false;"><i class="fas fa-chart-line"></i> Dashboard</a>
                 <a href="#" onclick="showTab('pgs'); return false;"><i class="fas fa-building"></i> PG Hostels</a>
                 <a href="#" onclick="showTab('inquiries'); return false;"><i class="fas fa-envelope"></i> Inquiries</a>
+                <a href="#" onclick="showTab('bookings'); return false;"><i class="fas fa-calendar-check"></i> Bookings</a>
+                <a href="#" onclick="showTab('users'); return false;"><i class="fas fa-users"></i> Users</a>
                 <a href="#" onclick="showTab('addpg'); return false;"><i class="fas fa-plus-circle"></i> Add PG</a>
                 <a href="#" onclick="showTab('settings'); return false;"><i class="fas fa-cog"></i> Settings</a>
                 <a href="index.html"><i class="fas fa-globe"></i> View Site</a>
@@ -336,6 +338,51 @@
                             <table>
                                 <thead><tr><th>Name</th><th>PG</th><th>Phone</th><th>Email</th><th>Message</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
                                 <tbody id="inquiryList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bookings Tab -->
+            <div id="tab-bookings" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-calendar-check"></i> All Bookings</h2>
+                        <select id="bookingStatusFilter" onchange="loadBookings()" style="padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Student</th><th>PG</th><th>Room</th><th>Check-in</th><th>Status</th><th>Payment</th><th>Actions</th></tr></thead>
+                                <tbody id="bookingList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="tab-users" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-users"></i> Users</h2>
+                        <select id="userTypeFilter" onchange="loadUsers()" style="padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;">
+                            <option value="">All Users</option>
+                            <option value="student">Students</option>
+                            <option value="owner">Owners</option>
+                        </select>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
+                                <tbody id="userList"></tbody>
                             </table>
                         </div>
                     </div>
@@ -522,6 +569,8 @@
         if (tab === 'dashboard') loadDashboard();
         else if (tab === 'pgs') loadPGs();
         else if (tab === 'inquiries') loadInquiries();
+        else if (tab === 'bookings') loadBookings();
+        else if (tab === 'users') loadUsers();
     }
 
     async function loadDashboard() {
@@ -530,7 +579,10 @@
             document.getElementById('statsGrid').innerHTML =
                 '<div class="stat-card"><div class="stat-icon blue"><i class="fas fa-building"></i></div><h3>' + stats.totalPGs + '</h3><p>Total PGs</p></div>' +
                 '<div class="stat-card"><div class="stat-icon green"><i class="fas fa-city"></i></div><h3>' + stats.totalCities + '</h3><p>Cities</p></div>' +
-                '<div class="stat-card"><div class="stat-icon orange"><i class="fas fa-star"></i></div><h3>' + stats.totalReviews + '</h3><p>Reviews</p></div>';
+                '<div class="stat-card"><div class="stat-icon orange"><i class="fas fa-star"></i></div><h3>' + stats.totalReviews + '</h3><p>Reviews</p></div>' +
+                '<div class="stat-card"><div class="stat-icon purple"><i class="fas fa-calendar-check"></i></div><h3>' + (stats.totalBookings||0) + '</h3><p>Bookings</p></div>' +
+                '<div class="stat-card"><div class="stat-icon blue"><i class="fas fa-user-tie"></i></div><h3>' + (stats.totalOwners||0) + '</h3><p>Owners</p></div>' +
+                '<div class="stat-card"><div class="stat-icon green"><i class="fas fa-user-graduate"></i></div><h3>' + (stats.totalStudents||0) + '</h3><p>Students</p></div>';
         } catch (e) {
             document.getElementById('statsGrid').innerHTML = '<p style="color:#64748b;">Backend not available. Start the server first.</p>';
         }
@@ -580,35 +632,74 @@
     async function handleAddPg(e) {
         e.preventDefault();
         try {
-            var photosStr = document.getElementById('pgPhotos').value.trim();
-            var photos = photosStr ? photosStr.split('\n').map(function(u) { return u.trim(); }).filter(function(u) { return u; }) : [];
             var amenitiesStr = document.getElementById('pgAmenities').value.trim();
             var amenities = amenitiesStr ? amenitiesStr.split(',').map(function(a) { return a.trim(); }) : [];
 
-            var body = new FormData();
-            body.append('name', document.getElementById('pgName').value);
-            body.append('city', document.getElementById('pgCity').value);
-            body.append('area', document.getElementById('pgArea').value);
-            body.append('gender', document.getElementById('pgGender').value);
-            body.append('lat', document.getElementById('pgLat').value || '0');
-            body.append('lng', document.getElementById('pgLng').value || '0');
-            body.append('phone', document.getElementById('pgPhone').value);
-            body.append('whatsapp', document.getElementById('pgWhatsapp').value);
-            body.append('email', document.getElementById('pgEmail').value);
-            body.append('food_type', document.getElementById('pgFoodType').value);
-            body.append('wifi_speed', document.getElementById('pgWifi').value);
-            body.append('deposit', document.getElementById('pgDeposit').value);
-            body.append('lock_in', document.getElementById('pgLockIn').value || '1');
-            body.append('notice_period', document.getElementById('pgNotice').value || '30');
-            body.append('description', document.getElementById('pgDescription').value);
-            body.append('amenities', JSON.stringify(amenities));
+            var body = {
+                name: document.getElementById('pgName').value,
+                city: document.getElementById('pgCity').value,
+                area: document.getElementById('pgArea').value,
+                gender: document.getElementById('pgGender').value,
+                lat: parseFloat(document.getElementById('pgLat').value) || 0,
+                lng: parseFloat(document.getElementById('pgLng').value) || 0,
+                phone: document.getElementById('pgPhone').value,
+                whatsapp: document.getElementById('pgWhatsapp').value,
+                email: document.getElementById('pgEmail').value,
+                food_type: document.getElementById('pgFoodType').value,
+                wifi_speed: document.getElementById('pgWifi').value,
+                deposit: parseInt(document.getElementById('pgDeposit').value) || 0,
+                lock_in: parseInt(document.getElementById('pgLockIn').value) || 1,
+                notice_period: parseInt(document.getElementById('pgNotice').value) || 30,
+                description: document.getElementById('pgDescription').value,
+                amenities: amenities
+            };
 
-            await apiFetch('/pgs', { method: 'POST', body: body });
+            await apiFetch('/pgs', { method: 'POST', body: JSON.stringify(body) });
             alert('PG added successfully!');
             document.getElementById('addPgForm').reset();
             showTab('pgs');
         } catch (err) {
             alert('Error: ' + err.message);
+        }
+    }
+
+    async function loadBookings() {
+        try {
+            var status = document.getElementById('bookingStatusFilter').value;
+            var query = status ? '?status=' + status : '';
+            var data = await apiFetch('/bookings/all' + query);
+            var html = '';
+            data.forEach(function(b) {
+                var statusClass = 'status-' + (b.status || 'pending');
+                var payClass = 'status-' + (b.payment_status || 'unpaid');
+                html += '<tr><td>' + (b.user_name||'') + '</td><td>' + (b.pg_name||'') + '</td><td>' + (b.room_type||'') + '</td><td>' + (b.check_in||'N/A') + '</td>' +
+                    '<td><span class="status-badge ' + statusClass + '">' + (b.status||'pending') + '</span></td>' +
+                    '<td><span class="status-badge ' + payClass + '">' + (b.payment_status||'unpaid') + '</span></td>' +
+                    '<td><select onchange="updateBookingStatus(' + b.id + ', this.value)" style="padding:4px;border-radius:6px;border:1px solid #e2e8f0;"><option value="pending"' + (b.status === 'pending' ? ' selected' : '') + '>Pending</option><option value="confirmed"' + (b.status === 'confirmed' ? ' selected' : '') + '>Confirmed</option><option value="cancelled"' + (b.status === 'cancelled' ? ' selected' : '') + '>Cancelled</option></select></td></tr>';
+            });
+            document.getElementById('bookingList').innerHTML = html || '<tr><td colspan="7" style="text-align:center;color:#64748b;">No bookings</td></tr>';
+        } catch (e) {
+            document.getElementById('bookingList').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#64748b;">Backend not available</td></tr>';
+        }
+    }
+
+    async function updateBookingStatus(id, status) {
+        try { await apiFetch('/bookings/' + id + '/status', { method: 'PUT', body: JSON.stringify({ status: status }) }); } catch (e) {}
+    }
+
+    async function loadUsers() {
+        try {
+            var type = document.getElementById('userTypeFilter').value;
+            var query = type ? '?user_type=' + type : '';
+            var data = await apiFetch('/auth/users' + query);
+            var html = '';
+            data.forEach(function(u) {
+                var typeBadge = u.user_type === 'owner' ? '<span style="background:#fde68a;color:#92400e;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:600;">Owner</span>' : '<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:600;">Student</span>';
+                html += '<tr><td>' + u.name + '</td><td>' + u.email + '</td><td>' + (u.phone||'-') + '</td><td>' + typeBadge + '</td><td>' + u.role + '</td><td>' + new Date(u.created_at).toLocaleDateString() + '</td><td>-</td></tr>';
+            });
+            document.getElementById('userList').innerHTML = html || '<tr><td colspan="7" style="text-align:center;color:#64748b;">No users</td></tr>';
+        } catch (e) {
+            document.getElementById('userList').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#64748b;">Backend not available</td></tr>';
         }
     }
     </script>
