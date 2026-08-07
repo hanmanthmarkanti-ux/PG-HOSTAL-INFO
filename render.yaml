@@ -3,9 +3,9 @@ services:
     name: pg-hostel-api
     runtime: node
     buildCommand: cd server && npm install
-    startCommand: cd server && npm run seed && npm start
+    startCommand: cd server && node seed.js && node server.js
     envVars:
       - key: JWT_SECRET
-        generateValue: true
-      - key: PORT
-        value: 5000
+        value: pg_hostel_secret_key_2026_hanmanth
+      - key: NODE_ENV
+        value: production

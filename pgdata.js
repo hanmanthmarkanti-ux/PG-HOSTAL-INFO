@@ -1171,3 +1171,5 @@ simplePGs.forEach(function(pg) {
         };
     }
 });
+
+if (typeof module !== 'undefined') module.exports = { allPGHostels };
