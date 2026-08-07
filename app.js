@@ -1,7 +1,7 @@
 var userLocation = null;
 var favorites = JSON.parse(localStorage.getItem('pgFavorites') || '[]');
 var compareList = JSON.parse(localStorage.getItem('pgCompare') || '[]');
-var allPGHostels = {};
+if (typeof allPGHostels === 'undefined') allPGHostels = {};
 var apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
 
 // Auth helpers
@@ -127,14 +127,23 @@ function getFilteredPGs() {
     for (var slug in allPGHostels) {
         if (!allPGHostels.hasOwnProperty(slug)) continue;
         var pg = allPGHostels[slug];
-        var avail = pg.availability || pg.is_available ? 'available' : 'available';
+
+        // Normalize field names (API uses snake_case, local uses camelCase)
+        var priceMin = pg.priceMin || pg.price_min || 0;
+        var priceMax = pg.priceMax || pg.price_max || 10000;
+        var totalReviews = pg.totalReviews || pg.total_reviews || 0;
+        var image = pg.image || '';
+        if (!image && pg.photos && pg.photos.length) {
+            image = typeof pg.photos[0] === 'string' ? pg.photos[0] : (pg.photos[0].photo_url || '');
+        }
+
         var obj = {
             slug: slug, name: pg.name, area: pg.area, city: pg.city, phone: pg.phone,
-            price: pg.price || ('₹' + (pg.priceMin || pg.price_min || 0).toLocaleString() + ' - ₹' + (pg.priceMax || pg.price_max || 0).toLocaleString()),
-            priceMin: pg.priceMin || pg.price_min || 0, priceMax: pg.priceMax || pg.price_max || 10000,
-            gender: pg.gender, rating: pg.rating || 0, totalReviews: pg.totalReviews || pg.total_reviews || 0,
-            availability: pg.availability || 'available', image: pg.image || (pg.photos && pg.photos[0] && pg.photos[0].photo_url) || '',
-            amenities: pg.amenities || [], lat: pg.lat, lng: pg.lng
+            price: pg.price || ('₹' + priceMin.toLocaleString() + ' - ₹' + priceMax.toLocaleString()),
+            priceMin: priceMin, priceMax: priceMax,
+            gender: pg.gender, rating: pg.rating || 0, totalReviews: totalReviews,
+            availability: pg.availability || (pg.is_available ? 'available' : 'available'),
+            image: image, amenities: pg.amenities || [], lat: pg.lat, lng: pg.lng
         };
         if (userLocation) obj.distance = haversineDistance(userLocation.lat, userLocation.lng, pg.lat, pg.lng);
         allPGs.push(obj);

@@ -1413,6 +1413,7 @@ body {
     cursor: pointer;
     transition: all 0.3s;
     border: none;
+    pointer-events: auto;
 }
 .btn-login {
     background: transparent;
