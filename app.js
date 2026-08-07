@@ -444,3 +444,9 @@ window.addEventListener('load', async function() { reveal(); animateCounters(); 
 document.querySelectorAll('.modal').forEach(function(modal) {
     modal.addEventListener('click', function(e) { if (e.target === modal) modal.style.display = 'none'; });
 });
+
+// Auto-refresh PGs every 60 seconds
+setInterval(async function() {
+    await loadPGs();
+    searchAndRender();
+}, 60000);
