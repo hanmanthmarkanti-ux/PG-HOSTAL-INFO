@@ -5,8 +5,7 @@ const path = require('path');
 const dbPath = path.join(__dirname, '..', 'pg_hostel.db');
 let db = null;
 
-async function getDb() {
-    if (db) return db;
+async function initDb() {
     const SQL = await initSqlJs();
     if (fs.existsSync(dbPath)) {
         const buffer = fs.readFileSync(dbPath);
@@ -19,6 +18,11 @@ async function getDb() {
     return db;
 }
 
+function getDb() {
+    if (!db) throw new Error('Database not initialized');
+    return db;
+}
+
 function saveDb() {
     if (db) {
         const data = db.export();
@@ -27,12 +31,9 @@ function saveDb() {
     }
 }
 
-// Auto-save periodically
-setInterval(saveDb, 5000);
-
-// Save on exit
+setInterval(saveDb, 10000);
 process.on('exit', saveDb);
 process.on('SIGINT', () => { saveDb(); process.exit(); });
 process.on('SIGTERM', () => { saveDb(); process.exit(); });
 
-module.exports = { getDb, saveDb };
+module.exports = { initDb, getDb, saveDb };
