@@ -1,0 +1,10 @@
+{
+  "name": "pg-hostel-info",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "postinstall": "cd server && npm install",
+    "start": "cd server && node seed.js && node server.js",
+    "dev": "cd server && node server.js"
+  }
+}
