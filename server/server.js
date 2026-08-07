@@ -30,7 +30,7 @@ app.use('/api/favorites', favoriteRoutes);
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 
 app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
+    if (!req.path.startsWith('/api') && !req.path.includes('.')) {
         res.sendFile(path.join(__dirname, '..', 'index.html'));
     }
 });
