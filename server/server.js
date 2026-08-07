@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+const { getDb } = require('./config/db');
 const createTables = require('./config/schema');
 const { auth } = require('./middleware/auth');
 
@@ -40,12 +41,12 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: err.message || 'Something went wrong!' });
 });
 
-createTables();
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`API: http://localhost:${PORT}/api`);
-    console.log(`Frontend: http://localhost:${PORT}`);
-});
+(async () => {
+    await getDb();
+    await createTables();
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+})();
 
 module.exports = app;
