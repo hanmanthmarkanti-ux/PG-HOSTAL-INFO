@@ -12,7 +12,7 @@ async function seed() {
         }
 
         console.log('Seeding data...');
-        const { allPGHostels } = require('../pgdata');
+        const { allPGHostels } = require('./pgdata');
 
         const pgEntries = Object.entries(allPGHostels);
         let count = 0;
