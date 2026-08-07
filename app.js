@@ -20,8 +20,8 @@ async function apiFetch(endpoint, opts) {
     if (opts.headers) Object.assign(headers, opts.headers);
     if (opts.body instanceof FormData) delete headers['Content-Type'];
     var resp = await fetch(apiBase + endpoint, Object.assign({}, opts, { headers: headers }));
+    if (!resp.ok) throw new Error('API not available');
     var data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || 'Request failed');
     return data;
 }
 
@@ -102,12 +102,14 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 async function loadPGs() {
     try {
         var data = await apiFetch('/pgs');
-        allPGHostels = {};
-        data.pgs.forEach(function(pg) {
-            allPGHostels[pg.slug] = pg;
-        });
+        if (data && data.pgs) {
+            allPGHostels = {};
+            data.pgs.forEach(function(pg) {
+                allPGHostels[pg.slug] = pg;
+            });
+        }
     } catch (e) {
-        console.log('Backend not available, using local data');
+        // Backend not available, using local data from pgdata.js
     }
 }
 
