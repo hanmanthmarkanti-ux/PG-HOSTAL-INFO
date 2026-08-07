@@ -1,6 +1,29 @@
 var userLocation = null;
 var favorites = JSON.parse(localStorage.getItem('pgFavorites') || '[]');
 var compareList = JSON.parse(localStorage.getItem('pgCompare') || '[]');
+var allPGHostels = {};
+var apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+
+// Auth helpers
+function getToken() { return localStorage.getItem('pg_token'); }
+function setToken(t) { localStorage.setItem('pg_token', t); }
+function removeToken() { localStorage.removeItem('pg_token'); localStorage.removeItem('pg_user'); }
+function getUser() { var u = localStorage.getItem('pg_user'); return u ? JSON.parse(u) : null; }
+function setUser(u) { localStorage.setItem('pg_user', JSON.stringify(u)); }
+
+// API fetch helper
+async function apiFetch(endpoint, opts) {
+    opts = opts || {};
+    var headers = { 'Content-Type': 'application/json' };
+    var token = getToken();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    if (opts.headers) Object.assign(headers, opts.headers);
+    if (opts.body instanceof FormData) delete headers['Content-Type'];
+    var resp = await fetch(apiBase + endpoint, Object.assign({}, opts, { headers: headers }));
+    var data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Request failed');
+    return data;
+}
 
 // Scroll Progress Bar
 var scrollProgress = document.createElement('div');
@@ -76,6 +99,18 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+async function loadPGs() {
+    try {
+        var data = await apiFetch('/pgs');
+        allPGHostels = {};
+        data.pgs.forEach(function(pg) {
+            allPGHostels[pg.slug] = pg;
+        });
+    } catch (e) {
+        console.log('Backend not available, using local data');
+    }
+}
+
 function getFilteredPGs() {
     var query = document.getElementById('searchInput').value.toLowerCase().trim();
     var maxDist = parseInt(document.getElementById('distanceFilter').value);
@@ -92,12 +127,14 @@ function getFilteredPGs() {
     for (var slug in allPGHostels) {
         if (!allPGHostels.hasOwnProperty(slug)) continue;
         var pg = allPGHostels[slug];
+        var avail = pg.availability || pg.is_available ? 'available' : 'available';
         var obj = {
             slug: slug, name: pg.name, area: pg.area, city: pg.city, phone: pg.phone,
-            price: pg.price, priceMin: pg.priceMin || 4000, priceMax: pg.priceMax || 10000,
-            gender: pg.gender, rating: pg.rating, totalReviews: pg.totalReviews || 0,
-            availability: pg.availability || 'available', image: pg.image, amenities: pg.amenities || [],
-            lat: pg.lat, lng: pg.lng
+            price: pg.price || ('₹' + (pg.priceMin || pg.price_min || 0).toLocaleString() + ' - ₹' + (pg.priceMax || pg.price_max || 0).toLocaleString()),
+            priceMin: pg.priceMin || pg.price_min || 0, priceMax: pg.priceMax || pg.price_max || 10000,
+            gender: pg.gender, rating: pg.rating || 0, totalReviews: pg.totalReviews || pg.total_reviews || 0,
+            availability: pg.availability || 'available', image: pg.image || (pg.photos && pg.photos[0] && pg.photos[0].photo_url) || '',
+            amenities: pg.amenities || [], lat: pg.lat, lng: pg.lng
         };
         if (userLocation) obj.distance = haversineDistance(userLocation.lat, userLocation.lng, pg.lat, pg.lng);
         allPGs.push(obj);
@@ -197,9 +234,15 @@ function renderCards(results) {
 function searchAndRender() { renderCards(getFilteredPGs()); }
 
 // Favorites
-function toggleFavorite(slug) {
+async function toggleFavorite(slug) {
     var idx = favorites.indexOf(slug);
-    if (idx === -1) favorites.push(slug); else favorites.splice(idx, 1);
+    if (idx === -1) {
+        favorites.push(slug);
+        if (getToken()) { try { await apiFetch('/favorites/' + allPGHostels[slug].id, { method: 'POST' }); } catch(e) {} }
+    } else {
+        favorites.splice(idx, 1);
+        if (getToken()) { try { await apiFetch('/favorites/' + allPGHostels[slug].id, { method: 'DELETE' }); } catch(e) {} }
+    }
     localStorage.setItem('pgFavorites', JSON.stringify(favorites));
     searchAndRender();
 }
@@ -211,10 +254,11 @@ function showFavorites() {
     var html = '<div class="favorites-grid">';
     favorites.forEach(function(slug) {
         var pg = allPGHostels[slug]; if (!pg) return;
+        var img = pg.image || (pg.photos && pg.photos[0] && pg.photos[0].photo_url) || '';
         html += '<div class="fav-card" onclick="window.location.href=\'detail.html?slug=' + slug + '\'">' +
-            '<img src="' + pg.image + '" alt="' + pg.name + '">' +
+            '<img src="' + img + '" alt="' + pg.name + '">' +
             '<div class="fav-info"><h4>' + pg.name + '</h4><p>' + pg.area + ', ' + pg.city + '</p>' +
-            '<p class="fav-price">' + pg.price + '</p></div>' +
+            '<p class="fav-price">' + (pg.price || '₹' + (pg.priceMin || 0) + ' - ₹' + (pg.priceMax || 0)) + '</p></div>' +
             '<button class="remove-fav" onclick="event.stopPropagation();toggleFavorite(\'' + slug + '\');showFavorites();"><i class="fas fa-trash"></i></button>' +
             '</div>';
     });
@@ -241,16 +285,17 @@ function showCompare() {
     var html = '<div class="compare-grid">';
     compareList.forEach(function(slug) {
         var pg = allPGHostels[slug]; if (!pg) return;
+        var img = pg.image || (pg.photos && pg.photos[0] && pg.photos[0].photo_url) || '';
         html += '<div class="compare-card">' +
-            '<img src="' + pg.image + '" alt="' + pg.name + '">' +
+            '<img src="' + img + '" alt="' + pg.name + '">' +
             '<h3>' + pg.name + '</h3>' +
             '<p class="compare-location">' + pg.area + ', ' + pg.city + '</p>' +
             '<table class="compare-table">' +
-            '<tr><td>Price</td><td>' + pg.price + '</td></tr>' +
-            '<tr><td>Rating</td><td>' + pg.rating.toFixed(1) + ' ★</td></tr>' +
+            '<tr><td>Price</td><td>' + (pg.price || '₹' + (pg.priceMin || 0) + ' - ₹' + (pg.priceMax || 0)) + '</td></tr>' +
+            '<tr><td>Rating</td><td>' + (pg.rating || 0).toFixed(1) + ' ★</td></tr>' +
             '<tr><td>Gender</td><td>' + pg.gender + '</td></tr>' +
-            '<tr><td>WiFi</td><td>' + (pg.wifiSpeed || 'Yes') + '</td></tr>' +
-            '<tr><td>Food</td><td>' + (pg.foodType || 'Included') + '</td></tr>' +
+            '<tr><td>WiFi</td><td>' + (pg.wifiSpeed || pg.wifi_speed || 'Yes') + '</td></tr>' +
+            '<tr><td>Food</td><td>' + (pg.foodType || pg.food_type || 'Included') + '</td></tr>' +
             '<tr><td>Deposit</td><td>' + (pg.deposit || 'N/A') + '</td></tr>' +
             '</table>' +
             '<a href="detail.html?slug=' + slug + '" class="compare-view-btn">View Details</a>' +
@@ -289,6 +334,64 @@ document.getElementById('priceMax').addEventListener('input', function() {
     searchAndRender();
 });
 
+// Auth Modal
+function showAuthModal(type) {
+    var modal = document.getElementById('authModal');
+    var loginForm = document.getElementById('loginForm');
+    var registerForm = document.getElementById('registerForm');
+    if (type === 'login') { loginForm.style.display = 'block'; registerForm.style.display = 'none'; }
+    else { loginForm.style.display = 'none'; registerForm.style.display = 'block'; }
+    modal.style.display = 'flex';
+}
+
+function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+
+async function handleLogin(e) {
+    e.preventDefault();
+    var email = document.getElementById('loginEmail').value;
+    var password = document.getElementById('loginPass').value;
+    try {
+        var data = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email: email, password: password }) });
+        setToken(data.token); setUser(data.user);
+        closeAuthModal(); updateUserUI();
+        alert('Welcome back, ' + data.user.name + '!');
+    } catch (err) { alert(err.message); }
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+    var name = document.getElementById('regName').value;
+    var email = document.getElementById('regEmail').value;
+    var phone = document.getElementById('regPhone').value;
+    var password = document.getElementById('regPass').value;
+    try {
+        var data = await apiFetch('/auth/register', { method: 'POST', body: JSON.stringify({ name: name, email: email, phone: phone, password: password }) });
+        setToken(data.token); setUser(data.user);
+        closeAuthModal(); updateUserUI();
+        alert('Account created! Welcome, ' + data.user.name + '!');
+    } catch (err) { alert(err.message); }
+}
+
+function logout() {
+    removeToken();
+    updateUserUI();
+    alert('Logged out successfully');
+}
+
+function updateUserUI() {
+    var user = getUser();
+    var authBtns = document.getElementById('authBtns');
+    var userMenu = document.getElementById('userMenu');
+    if (user) {
+        authBtns.style.display = 'none';
+        userMenu.style.display = 'flex';
+        document.getElementById('userName').textContent = user.name;
+    } else {
+        authBtns.style.display = 'flex';
+        userMenu.style.display = 'none';
+    }
+}
+
 // Event listeners
 document.getElementById('searchBtn').addEventListener('click', searchAndRender);
 document.getElementById('searchInput').addEventListener('keyup', function(e) { if (e.key === 'Enter') searchAndRender(); });
@@ -301,7 +404,7 @@ document.getElementById('availabilityFilter').addEventListener('change', searchA
 document.querySelectorAll('.amenity-check').forEach(function(cb) { cb.addEventListener('change', searchAndRender); });
 
 window.addEventListener('scroll', function() { reveal(); handleNavScroll(); });
-window.addEventListener('load', function() { reveal(); animateCounters(); searchAndRender(); });
+window.addEventListener('load', async function() { reveal(); animateCounters(); await loadPGs(); searchAndRender(); updateUserUI(); });
 
 // Close modals on outside click
 document.querySelectorAll('.modal').forEach(function(modal) {

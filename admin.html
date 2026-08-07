@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - PG Finder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; min-height: 100vh; }
+
+        .admin-layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+            color: white;
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .sidebar-brand {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .sidebar-brand i { font-size: 1.5rem; color: #818cf8; }
+        .sidebar-brand h2 { font-size: 1.1rem; font-weight: 700; }
+        .sidebar-brand small { display: block; font-size: 0.7rem; opacity: 0.6; font-weight: 400; }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .sidebar-nav a i { width: 20px; text-align: center; }
+
+        /* Main Content */
+        .admin-main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 24px;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .admin-header h1 { font-size: 1.5rem; color: #1e293b; }
+        .admin-header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .admin-header .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-4px); }
+        .stat-card .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+        }
+        .stat-card .stat-icon.blue { background: #e0e7ff; color: #4f46e5; }
+        .stat-card .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-card .stat-icon.orange { background: #ffedd5; color: #ea580c; }
+        .stat-card .stat-icon.purple { background: #f3e8ff; color: #9333ea; }
+        .stat-card h3 { font-size: 2rem; font-weight: 800; color: #1e293b; }
+        .stat-card p { color: #64748b; font-size: 0.85rem; margin-top: 4px; }
+
+        /* Content Card */
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-header h2 { font-size: 1.1rem; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+        .card-body { padding: 24px; }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(99,102,241,0.3); }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+        /* Table */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+        th { font-weight: 600; color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { color: #1e293b; font-size: 0.9rem; }
+        tr:hover { background: #f8fafc; }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-contacted { background: #dbeafe; color: #2563eb; }
+        .status-resolved { background: #dcfce7; color: #16a34a; }
+
+        /* Forms */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-weight: 600; font-size: 0.85rem; color: #475569; margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .form-full { grid-column: 1 / -1; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: white; padding: 4px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+            color: #64748b;
+        }
+        .tab.active { background: #6366f1; color: white; }
+        .tab:hover:not(.active) { background: #f1f5f9; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Login page */
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        }
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .login-card h1 { text-align: center; margin-bottom: 8px; color: #1e293b; }
+        .login-card .subtitle { text-align: center; color: #64748b; margin-bottom: 32px; }
+        .login-card .form-group input { padding: 14px 16px; }
+        .login-card .btn-primary { width: 100%; padding: 14px; font-size: 1rem; justify-content: center; }
+        .login-error { color: #ef4444; text-align: center; margin-top: 12px; font-size: 0.85rem; display: none; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .admin-main { margin-left: 0; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-page">
+        <div class="login-card">
+            <h1><i class="fas fa-shield-alt" style="color:#6366f1;"></i></h1>
+            <h1>Admin Panel</h1>
+            <p class="subtitle">PG Finder Management System</p>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required placeholder="admin@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPass" required placeholder="Enter password">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Login</button>
+                <p class="login-error" id="loginError"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="admin-layout" style="display:none;">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                    <h2>PG Finder</h2>
+                    <small>Admin Panel</small>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active" onclick="showTab('dashboard'); return false;"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <a href="#" onclick="showTab('pgs'); return false;"><i class="fas fa-building"></i> PG Hostels</a>
+                <a href="#" onclick="showTab('inquiries'); return false;"><i class="fas fa-envelope"></i> Inquiries</a>
+                <a href="#" onclick="showTab('addpg'); return false;"><i class="fas fa-plus-circle"></i> Add PG</a>
+                <a href="#" onclick="showTab('settings'); return false;"><i class="fas fa-cog"></i> Settings</a>
+                <a href="index.html"><i class="fas fa-globe"></i> View Site</a>
+                <a href="#" onclick="logoutAdmin(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="user-info">
+                    <span id="adminName">Admin</span>
+                    <div class="user-avatar" id="adminAvatar">A</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="stats-grid" id="statsGrid"></div>
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-clock"></i> Recent Inquiries</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Name</th><th>PG</th><th>Phone</th><th>Status</th><th>Date</th></tr></thead>
+                                <tbody id="recentInquiries"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PGs Tab -->
+            <div id="tab-pgs" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-building"></i> All PG Hostels</h2>
+                        <button class="btn btn-primary" onclick="showTab('addpg')"><i class="fas fa-plus"></i> Add New</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Name</th><th>Area</th><th>City</th><th>Gender</th><th>Price</th><th>Rating</th><th>Actions</th></tr></thead>
+                                <tbody id="pgList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inquiries Tab -->
+            <div id="tab-inquiries" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-envelope"></i> All Inquiries</h2>
+                        <select id="inquiryStatusFilter" onchange="loadInquiries()" style="padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Name</th><th>PG</th><th>Phone</th><th>Email</th><th>Message</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                                <tbody id="inquiryList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add PG Tab -->
+            <div id="tab-addpg" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-plus-circle"></i> Add New PG Hostel</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="addPgForm" onsubmit="handleAddPg(event)">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>PG Name *</label>
+                                    <input type="text" id="pgName" required placeholder="e.g. Zolo Premium PG">
+                                </div>
+                                <div class="form-group">
+                                    <label>City *</label>
+                                    <select id="pgCity" required>
+                                        <option value="">Select City</option>
+                                        <option>Hyderabad</option><option>Warangal</option><option>Karimnagar</option>
+                                        <option>Nizamabad</option><option>Khammam</option><option>Nalgonda</option><option>Mahbubnagar</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Area *</label>
+                                    <input type="text" id="pgArea" required placeholder="e.g. Hitec City">
+                                </div>
+                                <div class="form-group">
+                                    <label>Gender *</label>
+                                    <select id="pgGender" required>
+                                        <option value="">Select</option>
+                                        <option value="unisex">Unisex</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Latitude</label>
+                                    <input type="number" step="any" id="pgLat" placeholder="17.4486">
+                                </div>
+                                <div class="form-group">
+                                    <label>Longitude</label>
+                                    <input type="number" step="any" id="pgLng" placeholder="78.3764">
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone *</label>
+                                    <input type="tel" id="pgPhone" required placeholder="+91 98765 40001">
+                                </div>
+                                <div class="form-group">
+                                    <label>WhatsApp</label>
+                                    <input type="tel" id="pgWhatsapp" placeholder="+91 98765 40001">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="pgEmail" placeholder="info@pg.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Food Type</label>
+                                    <select id="pgFoodType">
+                                        <option value="veg">Veg</option>
+                                        <option value="non-veg">Non-Veg</option>
+                                        <option value="both">Both</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>WiFi Speed</label>
+                                    <input type="text" id="pgWifi" placeholder="50 Mbps">
+                                </div>
+                                <div class="form-group">
+                                    <label>Deposit</label>
+                                    <input type="text" id="pgDeposit" placeholder="₹5,000">
+                                </div>
+                                <div class="form-group">
+                                    <label>Lock-in (months)</label>
+                                    <input type="number" id="pgLockIn" placeholder="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Notice Period (days)</label>
+                                    <input type="number" id="pgNotice" placeholder="30">
+                                </div>
+                                <div class="form-group form-full">
+                                    <label>Photos (URLs, one per line)</label>
+                                    <textarea id="pgPhotos" placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg"></textarea>
+                                </div>
+                                <div class="form-group form-full">
+                                    <label>Amenities (comma separated)</label>
+                                    <input type="text" id="pgAmenities" placeholder="WiFi, AC, Meals, CCTV, Power Backup">
+                                </div>
+                                <div class="form-group form-full">
+                                    <label>Description</label>
+                                    <textarea id="pgDescription" placeholder="Brief description of the PG..."></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top:16px;"><i class="fas fa-save"></i> Save PG Hostel</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="tab-settings" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header"><h2><i class="fas fa-cog"></i> Settings</h2></div>
+                    <div class="card-body">
+                        <p style="color:#64748b;">Admin settings coming soon...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    var apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+    var token = localStorage.getItem('pg_token');
+    var user = JSON.parse(localStorage.getItem('pg_user') || 'null');
+
+    async function apiFetch(endpoint, opts) {
+        opts = opts || {};
+        var headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        if (opts.body && !(opts.body instanceof FormData)) {
+            // body already stringified
+        }
+        var resp = await fetch(apiBase + endpoint, Object.assign({}, opts, { headers: headers }));
+        var data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Request failed');
+        return data;
+    }
+
+    // Check auth
+    if (token && user) {
+        showDashboard();
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        try {
+            var data = await apiFetch('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: document.getElementById('loginEmail').value,
+                    password: document.getElementById('loginPass').value
+                })
+            });
+            token = data.token;
+            user = data.user;
+            localStorage.setItem('pg_token', token);
+            localStorage.setItem('pg_user', JSON.stringify(user));
+            showDashboard();
+        } catch (err) {
+            var errEl = document.getElementById('loginError');
+            errEl.textContent = err.message;
+            errEl.style.display = 'block';
+        }
+    }
+
+    function showDashboard() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminDashboard').style.display = 'flex';
+        document.getElementById('adminName').textContent = user.name;
+        document.getElementById('adminAvatar').textContent = user.name.charAt(0).toUpperCase();
+        loadDashboard();
+    }
+
+    function logoutAdmin() {
+        localStorage.removeItem('pg_token');
+        localStorage.removeItem('pg_user');
+        token = null;
+        user = null;
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('adminDashboard').style.display = 'none';
+    }
+
+    function showTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.querySelectorAll('.sidebar-nav a').forEach(function(a) { a.classList.remove('active'); });
+        event.target.closest('a').classList.add('active');
+
+        if (tab === 'dashboard') loadDashboard();
+        else if (tab === 'pgs') loadPGs();
+        else if (tab === 'inquiries') loadInquiries();
+    }
+
+    async function loadDashboard() {
+        try {
+            var stats = await apiFetch('/pgs/stats');
+            document.getElementById('statsGrid').innerHTML =
+                '<div class="stat-card"><div class="stat-icon blue"><i class="fas fa-building"></i></div><h3>' + stats.totalPGs + '</h3><p>Total PGs</p></div>' +
+                '<div class="stat-card"><div class="stat-icon green"><i class="fas fa-city"></i></div><h3>' + stats.totalCities + '</h3><p>Cities</p></div>' +
+                '<div class="stat-card"><div class="stat-icon orange"><i class="fas fa-star"></i></div><h3>' + stats.totalReviews + '</h3><p>Reviews</p></div>';
+        } catch (e) {
+            document.getElementById('statsGrid').innerHTML = '<p style="color:#64748b;">Backend not available. Start the server first.</p>';
+        }
+    }
+
+    async function loadPGs() {
+        try {
+            var data = await apiFetch('/pgs');
+            var html = '';
+            data.pgs.forEach(function(pg) {
+                html += '<tr><td><strong>' + pg.name + '</strong></td><td>' + pg.area + '</td><td>' + pg.city + '</td><td>' + pg.gender + '</td><td>₹' + (pg.price_min || 0).toLocaleString() + '</td><td>' + (pg.rating || 0).toFixed(1) + '</td><td><button class="btn btn-danger btn-sm" onclick="deletePG(' + pg.id + ')"><i class="fas fa-trash"></i></button></td></tr>';
+            });
+            document.getElementById('pgList').innerHTML = html || '<tr><td colspan="7" style="text-align:center;color:#64748b;">No PGs found</td></tr>';
+        } catch (e) {
+            document.getElementById('pgList').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#64748b;">Backend not available</td></tr>';
+        }
+    }
+
+    async function loadInquiries() {
+        try {
+            var status = document.getElementById('inquiryStatusFilter').value;
+            var query = status ? '?status=' + status : '';
+            var data = await apiFetch('/inquiries' + query);
+            var html = '';
+            data.forEach(function(inq) {
+                var statusClass = 'status-' + inq.status;
+                html += '<tr><td>' + inq.name + '</td><td>' + (inq.pg_name || '-') + '</td><td>' + inq.phone + '</td><td>' + inq.email + '</td><td>' + (inq.message || '-') + '</td><td><span class="status-badge ' + statusClass + '">' + inq.status + '</span></td><td>' + new Date(inq.created_at).toLocaleDateString() + '</td><td><select onchange="updateInquiryStatus(' + inq.id + ', this.value)" style="padding:4px;border-radius:6px;border:1px solid #e2e8f0;"><option value="pending"' + (inq.status === 'pending' ? ' selected' : '') + '>Pending</option><option value="contacted"' + (inq.status === 'contacted' ? ' selected' : '') + '>Contacted</option><option value="resolved"' + (inq.status === 'resolved' ? ' selected' : '') + '>Resolved</option></select></td></tr>';
+            });
+            document.getElementById('inquiryList').innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:#64748b;">No inquiries</td></tr>';
+        } catch (e) {
+            document.getElementById('inquiryList').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#64748b;">Backend not available</td></tr>';
+        }
+    }
+
+    async function updateInquiryStatus(id, status) {
+        try { await apiFetch('/inquiries/' + id + '/status', { method: 'PUT', body: JSON.stringify({ status: status }) }); } catch (e) {}
+    }
+
+    async function deletePG(id) {
+        if (!confirm('Delete this PG?')) return;
+        try {
+            await apiFetch('/pgs/' + id, { method: 'DELETE' });
+            loadPGs();
+        } catch (e) { alert(e.message); }
+    }
+
+    async function handleAddPg(e) {
+        e.preventDefault();
+        try {
+            var photosStr = document.getElementById('pgPhotos').value.trim();
+            var photos = photosStr ? photosStr.split('\n').map(function(u) { return u.trim(); }).filter(function(u) { return u; }) : [];
+            var amenitiesStr = document.getElementById('pgAmenities').value.trim();
+            var amenities = amenitiesStr ? amenitiesStr.split(',').map(function(a) { return a.trim(); }) : [];
+
+            var body = new FormData();
+            body.append('name', document.getElementById('pgName').value);
+            body.append('city', document.getElementById('pgCity').value);
+            body.append('area', document.getElementById('pgArea').value);
+            body.append('gender', document.getElementById('pgGender').value);
+            body.append('lat', document.getElementById('pgLat').value || '0');
+            body.append('lng', document.getElementById('pgLng').value || '0');
+            body.append('phone', document.getElementById('pgPhone').value);
+            body.append('whatsapp', document.getElementById('pgWhatsapp').value);
+            body.append('email', document.getElementById('pgEmail').value);
+            body.append('food_type', document.getElementById('pgFoodType').value);
+            body.append('wifi_speed', document.getElementById('pgWifi').value);
+            body.append('deposit', document.getElementById('pgDeposit').value);
+            body.append('lock_in', document.getElementById('pgLockIn').value || '1');
+            body.append('notice_period', document.getElementById('pgNotice').value || '30');
+            body.append('description', document.getElementById('pgDescription').value);
+            body.append('amenities', JSON.stringify(amenities));
+
+            await apiFetch('/pgs', { method: 'POST', body: body });
+            alert('PG added successfully!');
+            document.getElementById('addPgForm').reset();
+            showTab('pgs');
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    }
+    </script>
+</body>
+</html>
