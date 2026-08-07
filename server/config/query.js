@@ -1,9 +1,11 @@
 const { getDb, saveDb } = require('./db');
 
-function query(sql, params = []) {
+function run(sql, params = []) {
     const db = getDb();
     db.run(sql, params);
+    const lastId = db.exec("SELECT last_insert_rowid() as id");
     saveDb();
+    return { lastInsertRowid: lastId.length ? lastId[0].values[0][0] : 0 };
 }
 
 function queryAll(sql, params = []) {
@@ -27,12 +29,4 @@ function queryOne(sql, params = []) {
     return rows[0] || undefined;
 }
 
-function run(sql, params = []) {
-    const db = getDb();
-    db.run(sql, params);
-    const lastId = db.exec("SELECT last_insert_rowid() as id");
-    saveDb();
-    return { lastInsertRowid: lastId.length ? lastId[0].values[0][0] : 0, changes: 0 };
-}
-
-module.exports = { query, queryAll, queryOne, run, getDb, saveDb };
+module.exports = { run, queryAll, queryOne };
