@@ -7,6 +7,13 @@ const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
+const requireOwner = async (req, res, next) => {
+    if (!req.user || (req.user.user_type !== 'owner' && req.user.role !== 'admin')) {
+        return res.status(403).json({ error: 'Owner access required' });
+    }
+    next();
+};
+
 // Multer config for photo uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, path.join(__dirname, '../uploads')),
@@ -89,13 +96,18 @@ router.get('/:slug', async (req, res) => {
     }
 });
 
-// POST /api/pgs - Create PG (Admin only)
-router.post('/', requireAdmin, upload.array('photos', 10), async (req, res) => {
+// POST /api/pgs - Create PG (Admin or Owner)
+router.post('/', requireAuth, requireOwner, upload.array('photos', 10), async (req, res) => {
     try {
         const data = req.body;
 
         // Generate slug
         data.slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+        // Auto-assign owner_id if owner
+        if (req.user.user_type === 'owner') {
+            data.owner_id = req.user.id;
+        }
 
         // Add room prices from JSON string
         if (typeof data.roomPrices === 'string') {
@@ -145,26 +157,36 @@ router.post('/', requireAdmin, upload.array('photos', 10), async (req, res) => {
     }
 });
 
-// PUT /api/pgs/:id - Update PG (Admin only)
-router.put('/:id', requireAdmin, upload.array('photos', 10), async (req, res) => {
+// PUT /api/pgs/:id - Update PG (Admin or Owner of that PG)
+router.put('/:id', requireAuth, upload.array('photos', 10), async (req, res) => {
     try {
+        const pg = PG.findById(req.params.id);
+        if (!pg) return res.status(404).json({ error: 'PG not found' });
+        if (req.user.role !== 'admin' && pg.owner_id !== req.user.id) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
         const data = req.body;
-        const pg = await PG.update(req.params.id, data);
+        const updated = await PG.update(req.params.id, data);
 
         if (req.files && req.files.length) {
             const photoUrls = req.files.map(f => `/uploads/${f.filename}`);
             await PG.addPhotos(req.params.id, photoUrls);
         }
 
-        res.json(pg);
+        res.json(updated);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// DELETE /api/pgs/:id - Delete PG (Admin only)
-router.delete('/:id', requireAdmin, async (req, res) => {
+// DELETE /api/pgs/:id - Delete PG (Admin or Owner of that PG)
+router.delete('/:id', requireAuth, async (req, res) => {
     try {
+        const pg = PG.findById(req.params.id);
+        if (!pg) return res.status(404).json({ error: 'PG not found' });
+        if (req.user.role !== 'admin' && pg.owner_id !== req.user.id) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
         await PG.delete(req.params.id);
         res.json({ message: 'PG deleted' });
     } catch (error) {

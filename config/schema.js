@@ -1,7 +1,7 @@
 const { getDb, saveDb } = require('./db');
 
 async function createTables() {
-    const db = await getDb();
+    const db = getDb();
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -10,6 +10,9 @@ async function createTables() {
             phone TEXT,
             password TEXT NOT NULL,
             role TEXT DEFAULT 'user',
+            user_type TEXT DEFAULT 'student',
+            business_name TEXT,
+            business_address TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
@@ -39,8 +42,12 @@ async function createTables() {
             email TEXT,
             description TEXT,
             is_available INTEGER DEFAULT 1,
+            owner_id INTEGER,
+            total_rooms INTEGER DEFAULT 0,
+            available_rooms INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL
         )
     `);
     db.run(`CREATE TABLE IF NOT EXISTS pg_amenities (id INTEGER PRIMARY KEY AUTOINCREMENT, pg_id INTEGER NOT NULL, amenity TEXT NOT NULL, FOREIGN KEY (pg_id) REFERENCES pgs(id) ON DELETE CASCADE)`);
@@ -51,8 +58,35 @@ async function createTables() {
     db.run(`CREATE TABLE IF NOT EXISTS inquiries (id INTEGER PRIMARY KEY AUTOINCREMENT, pg_id INTEGER NOT NULL, user_id INTEGER, name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT NOT NULL, message TEXT, status TEXT DEFAULT 'pending', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (pg_id) REFERENCES pgs(id) ON DELETE CASCADE, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL)`);
     db.run(`CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, pg_id INTEGER NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, FOREIGN KEY (pg_id) REFERENCES pgs(id) ON DELETE CASCADE, UNIQUE(user_id, pg_id))`);
     db.run(`CREATE TABLE IF NOT EXISTS house_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, pg_id INTEGER NOT NULL, rule TEXT NOT NULL, FOREIGN KEY (pg_id) REFERENCES pgs(id) ON DELETE CASCADE)`);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS bookings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pg_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            room_type TEXT NOT NULL,
+            check_in DATE,
+            check_out DATE,
+            total_amount INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'pending',
+            payment_status TEXT DEFAULT 'unpaid',
+            notes TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (pg_id) REFERENCES pgs(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    `);
+
+    try { db.run('ALTER TABLE pgs ADD COLUMN owner_id INTEGER'); } catch(e) {}
+    try { db.run('ALTER TABLE pgs ADD COLUMN total_rooms INTEGER DEFAULT 0'); } catch(e) {}
+    try { db.run('ALTER TABLE pgs ADD COLUMN available_rooms INTEGER DEFAULT 0'); } catch(e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN user_type TEXT DEFAULT student'); } catch(e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN business_name TEXT'); } catch(e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN business_address TEXT'); } catch(e) {}
+
     saveDb();
-    console.log('Tables created');
+    console.log('Tables created/updated');
 }
 
 module.exports = createTables;

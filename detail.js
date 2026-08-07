@@ -197,6 +197,17 @@ function renderDetail(pg) {
         '<div class="form-group"><label>Message</label><textarea id="inqMessage" placeholder="Any specific requirements..."></textarea></div>' +
         '<button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Send Inquiry</button></form></div>';
 
+    // Book Room Section
+    var bookHTML = '<div class="detail-section" style="background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(6,182,212,0.08));border-radius:16px;padding:28px;">' +
+        '<h2><i class="fas fa-calendar-check"></i> Book a Room</h2>' +
+        '<div class="form-success" id="bookSuccess"><i class="fas fa-check-circle"></i> Booking request submitted! You will receive confirmation soon.</div>' +
+        '<form class="inquiry-form" id="bookForm">' +
+        '<div class="form-row"><div class="form-group"><label>Room Type *</label><select id="bookRoom" required><option value="">Select Room Type</option><option>Single Occupancy</option><option>Double Sharing</option><option>Triple Sharing</option><option>Quad Sharing</option></select></div>' +
+        '<div class="form-group"><label>Check-in Date</label><input type="date" id="bookCheckin"></div></div>' +
+        '<div class="form-row"><div class="form-group"><label>Check-out Date (optional)</label><input type="date" id="bookCheckout"></div>' +
+        '<div class="form-group"><label>Notes</label><input type="text" id="bookNotes" placeholder="Any special requests..."></div></div>' +
+        '<button type="submit" class="btn-submit" style="background:linear-gradient(135deg,#f5576c,#f093fb);"><i class="fas fa-calendar-check"></i> Request Booking</button></form></div>';
+
     var priceText = pg.price || ('₹' + (pg.priceMin || pg.price_min || 0).toLocaleString() + ' - ₹' + (pg.priceMax || pg.price_max || 0).toLocaleString());
 
     var html = galleryHTML +
@@ -211,7 +222,7 @@ function renderDetail(pg) {
         '<div><strong>Occupancy:</strong> ' + (pg.occupancy || 'Double, Triple') + '</div>' +
         '<div><strong>Gender:</strong> ' + pg.gender + '</div></div></div>' +
         '<div class="detail-section"><h2><i class="fas fa-concierge-bell"></i> Amenities</h2><div class="amenities-list">' + amenitiesHTML + '</div></div>' +
-        foodHTML + reviewsHTML + mapHTML + rulesHTML + nearbyHTML + contactHTML + inquiryHTML +
+        foodHTML + reviewsHTML + mapHTML + rulesHTML + nearbyHTML + contactHTML + inquiryHTML + bookHTML +
         '<a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to All PGs</a></div>';
 
     container.innerHTML = html;
@@ -244,6 +255,28 @@ function renderDetail(pg) {
         document.getElementById('formSuccess').style.display = 'block';
         document.getElementById('inquiryForm').reset();
         setTimeout(function() { document.getElementById('formSuccess').style.display = 'none'; }, 5000);
+    });
+
+    // Book form submit
+    document.getElementById('bookForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var token = localStorage.getItem('pg_token');
+        if (!token) { alert('Please login first to book a room.'); showAuthModal('login'); return; }
+        try {
+            await apiFetch('/bookings', {
+                method: 'POST',
+                body: JSON.stringify({
+                    pg_id: pg.id,
+                    room_type: document.getElementById('bookRoom').value,
+                    check_in: document.getElementById('bookCheckin').value,
+                    check_out: document.getElementById('bookCheckout').value,
+                    notes: document.getElementById('bookNotes').value
+                })
+            });
+            document.getElementById('bookSuccess').style.display = 'block';
+            document.getElementById('bookForm').reset();
+            setTimeout(function() { document.getElementById('bookSuccess').style.display = 'none'; }, 5000);
+        } catch (err) { alert('Booking failed: ' + err.message); }
     });
 }
 

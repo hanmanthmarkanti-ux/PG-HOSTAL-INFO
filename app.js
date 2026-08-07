@@ -371,15 +371,26 @@ async function handleLogin(e) {
 
 async function handleRegister(e) {
     e.preventDefault();
+    var userType = document.querySelector('input[name="userType"]:checked').value;
     var name = document.getElementById('regName').value;
     var email = document.getElementById('regEmail').value;
     var phone = document.getElementById('regPhone').value;
     var password = document.getElementById('regPass').value;
+    var body = { name: name, email: email, phone: phone, password: password, user_type: userType };
+    if (userType === 'owner') {
+        body.business_name = document.getElementById('regBusinessName').value;
+        body.business_address = document.getElementById('regBusinessAddress').value;
+    }
     try {
-        var data = await apiFetch('/auth/register', { method: 'POST', body: JSON.stringify({ name: name, email: email, phone: phone, password: password }) });
+        var data = await apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(body) });
         setToken(data.token); setUser(data.user);
         closeAuthModal(); updateUserUI();
-        alert('Account created! Welcome, ' + data.user.name + '!');
+        if (userType === 'owner') {
+            alert('Owner account created! Welcome, ' + data.user.name + '! You can now list your PG hostels.');
+            window.location.href = 'owner.html';
+        } else {
+            alert('Account created! Welcome, ' + data.user.name + '!');
+        }
     } catch (err) { alert(err.message); }
 }
 
@@ -397,11 +408,23 @@ function updateUserUI() {
         authBtns.style.display = 'none';
         userMenu.style.display = 'flex';
         document.getElementById('userName').textContent = user.name;
+        var ownerLink = document.getElementById('ownerLink');
+        var adminLink = document.getElementById('adminLink');
+        if (ownerLink) ownerLink.style.display = (user.user_type === 'owner' || user.role === 'admin') ? 'inline-flex' : 'none';
+        if (adminLink) adminLink.style.display = (user.role === 'admin') ? 'inline-flex' : 'none';
     } else {
         authBtns.style.display = 'flex';
         userMenu.style.display = 'none';
     }
 }
+
+// User type toggle
+document.addEventListener('change', function(e) {
+    if (e.target.name === 'userType') {
+        var ownerFields = document.getElementById('ownerFields');
+        if (ownerFields) ownerFields.style.display = e.target.value === 'owner' ? 'block' : 'none';
+    }
+});
 
 // Event listeners
 document.getElementById('searchBtn').addEventListener('click', searchAndRender);

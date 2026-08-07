@@ -18,6 +18,10 @@ class Inquiry {
         return queryAll(query, params);
     }
 
+    static getByPgId(pgId) {
+        return queryAll('SELECT * FROM inquiries WHERE pg_id = ? ORDER BY created_at DESC', [pgId]);
+    }
+
     static updateStatus(id, status) {
         run('UPDATE inquiries SET status = ? WHERE id = ?', [status, id]);
     }

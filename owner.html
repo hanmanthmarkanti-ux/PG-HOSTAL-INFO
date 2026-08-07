@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Dashboard | PG Finder</title>
+    <link rel="stylesheet" href="style.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand"><a href="index.html" style="text-decoration:none;color:inherit;"><i class="fas fa-home"></i><span>PG Finder</span></a></div>
+        <div class="nav-credit">Owner Dashboard</div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link"><i class="fas fa-search"></i> Browse PGs</a>
+            <div id="userMenu" class="user-menu">
+                <span class="user-greeting"><i class="fas fa-user-circle"></i> <span id="userName"></span></span>
+                <button class="btn-logout" onclick="ownerLogout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="ownerLogin" style="max-width:450px;margin:80px auto;padding:40px;background:white;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.1);text-align:center;">
+        <h2><i class="fas fa-building" style="color:var(--primary);"></i> Owner Login</h2>
+        <p style="color:#64748b;margin:12px 0 24px;">Login to manage your PG hostels</p>
+        <form onsubmit="ownerLogin(event)">
+            <div class="form-group" style="text-align:left;margin-bottom:16px;">
+                <label style="font-weight:600;display:block;margin-bottom:6px;">Email</label>
+                <input type="email" id="ownerEmail" required placeholder="your@email.com" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+            </div>
+            <div class="form-group" style="text-align:left;margin-bottom:16px;">
+                <label style="font-weight:600;display:block;margin-bottom:6px;">Password</label>
+                <input type="password" id="ownerPass" required placeholder="Enter password" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+            </div>
+            <button type="submit" class="btn-submit btn-full" style="padding:14px;font-size:1rem;">Login as Owner</button>
+        </form>
+        <p style="margin-top:16px;color:#64748b;font-size:0.9rem;">Not an owner? <a href="index.html" style="color:var(--primary);font-weight:600;">Register as Student</a></p>
+    </div>
+
+    <div id="ownerDashboard" style="display:none;">
+        <div class="owner-header">
+            <h1><i class="fas fa-building"></i> <span id="ownerName">Owner</span>'s Dashboard</h1>
+            <p>Manage your PG hostels, bookings, and inquiries</p>
+        </div>
+
+        <div class="owner-stats">
+            <div class="owner-stat-card">
+                <div class="stat-num" id="statPGs">0</div>
+                <div class="stat-lbl">My PGs</div>
+            </div>
+            <div class="owner-stat-card">
+                <div class="stat-num" id="statBookings">0</div>
+                <div class="stat-lbl">Bookings</div>
+            </div>
+            <div class="owner-stat-card">
+                <div class="stat-num" id="statInquiries">0</div>
+                <div class="stat-lbl">Inquiries</div>
+            </div>
+        </div>
+
+        <div class="owner-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h2 style="margin:0;"><i class="fas fa-list"></i> My PG Listings</h2>
+                <button class="btn-submit" onclick="showAddPG()"><i class="fas fa-plus"></i> Add New PG</button>
+            </div>
+            <table class="pg-table" id="ownerPGTable">
+                <thead><tr><th>Name</th><th>Area</th><th>Price</th><th>Rooms</th><th>Rating</th><th>Actions</th></tr></thead>
+                <tbody id="ownerPGBody"></tbody>
+            </table>
+            <p id="noPGs" style="text-align:center;color:#64748b;padding:40px;display:none;">No PGs listed yet. Click "Add New PG" to get started!</p>
+        </div>
+
+        <div class="owner-section">
+            <h2><i class="fas fa-calendar-check"></i> Recent Bookings</h2>
+            <table class="pg-table" id="ownerBookingTable">
+                <thead><tr><th>Student</th><th>PG</th><th>Room</th><th>Date</th><th>Status</th><th>Payment</th></tr></thead>
+                <tbody id="ownerBookingBody"></tbody>
+            </table>
+            <p id="noBookings" style="text-align:center;color:#64748b;padding:40px;display:none;">No bookings yet.</p>
+        </div>
+
+        <div class="owner-section">
+            <h2><i class="fas fa-envelope"></i> Inquiries</h2>
+            <table class="pg-table" id="ownerInquiryTable">
+                <thead><tr><th>Name</th><th>PG</th><th>Phone</th><th>Message</th><th>Status</th><th>Date</th></tr></thead>
+                <tbody id="ownerInquiryBody"></tbody>
+            </table>
+            <p id="noInquiries" style="text-align:center;color:#64748b;padding:40px;display:none;">No inquiries yet.</p>
+        </div>
+    </div>
+
+    <!-- Add/Edit PG Modal -->
+    <div id="pgModal" class="modal" style="display:none;">
+        <div class="modal-content modal-large" style="max-width:700px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> <span id="pgModalTitle">Add New PG</span></h2>
+                <button class="modal-close" onclick="closePGModal()">&times;</button>
+            </div>
+            <form id="pgForm" onsubmit="savePG(event)" style="padding:24px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="form-group"><label>PG Name *</label><input type="text" id="pgName" required placeholder="e.g. Sun shine PG"></div>
+                    <div class="form-group"><label>City *</label><select id="pgCity" class="filter-select"><option>Hyderabad</option><option>Warangal</option><option>Karimnagar</option><option>Nizamabad</option><option>Khammam</option><option>Nalgonda</option><option>Mahbubnagar</option></select></div>
+                    <div class="form-group"><label>Area *</label><input type="text" id="pgArea" required placeholder="e.g. Madhapur"></div>
+                    <div class="form-group"><label>Full Address</label><input type="text" id="pgAddress" placeholder="Full address"></div>
+                    <div class="form-group"><label>Gender</label><select id="pgGender" class="filter-select"><option value="unisex">Unisex</option><option value="male">Boys</option><option value="female">Girls</option></select></div>
+                    <div class="form-group"><label>Type</label><select id="pgType" class="filter-select"><option value="standard">Standard</option><option value="premium">Premium</option><option value="luxury">Luxury</option></select></div>
+                    <div class="form-group"><label>Min Price (₹/month) *</label><input type="number" id="pgPriceMin" required placeholder="5000"></div>
+                    <div class="form-group"><label>Max Price (₹/month) *</label><input type="number" id="pgPriceMax" required placeholder="10000"></div>
+                    <div class="form-group"><label>Deposit (₹)</label><input type="number" id="pgDeposit" placeholder="5000"></div>
+                    <div class="form-group"><label>Total Rooms</label><input type="number" id="pgTotalRooms" placeholder="20"></div>
+                    <div class="form-group"><label>Available Rooms</label><input type="number" id="pgAvailRooms" placeholder="10"></div>
+                    <div class="form-group"><label>Food Type</label><select id="pgFood" class="filter-select"><option value="veg">Veg</option><option value="non-veg">Non-Veg</option><option value="both">Both</option><option value="none">No Food</option></select></div>
+                    <div class="form-group"><label>WiFi Speed</label><input type="text" id="pgWifi" placeholder="e.g. 50 Mbps"></div>
+                    <div class="form-group"><label>Phone *</label><input type="tel" id="pgPhone" required placeholder="+91 XXXXX XXXXX"></div>
+                    <div class="form-group"><label>WhatsApp</label><input type="tel" id="pgWhatsapp" placeholder="+91 XXXXX XXXXX"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="pgEmail" placeholder="hostel@email.com"></div>
+                </div>
+                <div class="form-group" style="margin-top:16px;"><label>Description</label><textarea id="pgDesc" rows="3" placeholder="Describe your PG..." style="width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:12px;font-family:inherit;resize:vertical;"></textarea></div>
+                <div class="form-group" style="margin-top:16px;"><label>Amenities (comma separated)</label><input type="text" id="pgAmenities" placeholder="WiFi, AC, Meals, Gym, Laundry"></div>
+                <div class="form-group" style="margin-top:16px;"><label>House Rules (comma separated)</label><input type="text" id="pgRules" placeholder="No smoking, No pets, etc."></div>
+                <input type="hidden" id="pgEditId">
+                <button type="submit" class="btn-submit btn-full" style="margin-top:20px;padding:14px;"><i class="fas fa-save"></i> Save PG</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+    var apiBase = '/api';
+
+    async function apiFetch(endpoint, opts) {
+        opts = opts || {};
+        var headers = { 'Content-Type': 'application/json' };
+        var token = localStorage.getItem('pg_token');
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        if (opts.headers) Object.assign(headers, opts.headers);
+        if (opts.body && opts.body instanceof FormData) delete headers['Content-Type'];
+        var resp = await fetch(apiBase + endpoint, Object.assign({}, opts, { headers: headers }));
+        if (!resp.ok) { var err = await resp.json().catch(function(){ return {error:'Request failed'}; }); throw new Error(err.error || 'Request failed'); }
+        return resp.json();
+    }
+
+    function getToken() { return localStorage.getItem('pg_token'); }
+    function getUser() { var u = localStorage.getItem('pg_user'); return u ? JSON.parse(u) : null; }
+
+    async function ownerLogin(e) {
+        e.preventDefault();
+        try {
+            var data = await apiFetch('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email: document.getElementById('ownerEmail').value, password: document.getElementById('ownerPass').value })
+            });
+            if (data.user.user_type !== 'owner' && data.user.role !== 'admin') {
+                alert('This account is not registered as a Hostel Owner.'); return;
+            }
+            localStorage.setItem('pg_token', data.token);
+            localStorage.setItem('pg_user', JSON.stringify(data.user));
+            loadDashboard();
+        } catch(e) { alert(e.message); }
+    }
+
+    function ownerLogout() {
+        localStorage.removeItem('pg_token');
+        localStorage.removeItem('pg_user');
+        location.reload();
+    }
+
+    async function loadDashboard() {
+        var user = getUser();
+        var token = getToken();
+        if (!user || !token) {
+            document.getElementById('ownerLogin').style.display = 'block';
+            document.getElementById('ownerDashboard').style.display = 'none';
+            return;
+        }
+        document.getElementById('ownerLogin').style.display = 'none';
+        document.getElementById('ownerDashboard').style.display = 'block';
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('ownerName').textContent = user.name;
+        loadOwnerStats();
+        loadOwnerPGs();
+        loadOwnerBookings();
+        loadOwnerInquiries();
+    }
+
+    async function loadOwnerStats() {
+        try {
+            var stats = await apiFetch('/owner/stats');
+            document.getElementById('statPGs').textContent = stats.totalPGs || 0;
+            document.getElementById('statBookings').textContent = stats.totalBookings || 0;
+            document.getElementById('statInquiries').textContent = stats.totalInquiries || 0;
+        } catch(e) {}
+    }
+
+    async function loadOwnerPGs() {
+        try {
+            var data = await apiFetch('/owner/pgs');
+            var tbody = document.getElementById('ownerPGBody');
+            var noMsg = document.getElementById('noPGs');
+            if (!data.pgs || data.pgs.length === 0) { tbody.innerHTML = ''; noMsg.style.display = 'block'; return; }
+            noMsg.style.display = 'none';
+            tbody.innerHTML = data.pgs.map(function(pg) {
+                return '<tr><td><strong>' + pg.name + '</strong><br><small style="color:#94a3b8;">' + (pg.type||'standard') + '</small></td>' +
+                '<td>' + pg.area + ', ' + pg.city + '</td>' +
+                '<td>₹' + (pg.price_min||0).toLocaleString() + ' - ₹' + (pg.price_max||0).toLocaleString() + '</td>' +
+                '<td>' + (pg.available_rooms||0) + '/' + (pg.total_rooms||0) + '</td>' +
+                '<td>⭐ ' + (pg.rating||0).toFixed(1) + ' (' + (pg.total_reviews||0) + ')</td>' +
+                '<td><button class="btn-submit" style="padding:6px 12px;font-size:0.8rem;" onclick="editPG(' + pg.id + ')"><i class="fas fa-edit"></i></button> ' +
+                '<button class="btn-logout" style="padding:6px 12px;font-size:0.8rem;border:2px solid #ef4444;background:transparent;color:#ef4444;border-radius:8px;cursor:pointer;" onclick="deletePG(' + pg.id + ')"><i class="fas fa-trash"></i></button></td></tr>';
+            }).join('');
+        } catch(e) { document.getElementById('noPGs').style.display = 'block'; }
+    }
+
+    async function loadOwnerBookings() {
+        try {
+            var bookings = await apiFetch('/owner/bookings');
+            var tbody = document.getElementById('ownerBookingBody');
+            var noMsg = document.getElementById('noBookings');
+            if (!bookings || bookings.length === 0) { tbody.innerHTML = ''; noMsg.style.display = 'block'; return; }
+            noMsg.style.display = 'none';
+            tbody.innerHTML = bookings.map(function(b) {
+                var statusClass = 'badge-' + (b.status || 'pending');
+                var payClass = 'badge-' + (b.payment_status || 'unpaid');
+                return '<tr><td>' + (b.user_name||'') + '<br><small>' + (b.user_email||'') + '</small></td>' +
+                '<td>' + (b.pg_name||'') + '</td><td>' + (b.room_type||'') + '</td>' +
+                '<td>' + (b.check_in||'N/A') + '</td>' +
+                '<td><span class="status-badge ' + statusClass + '">' + (b.status||'pending') + '</span></td>' +
+                '<td><span class="status-badge ' + payClass + '">' + (b.payment_status||'unpaid') + '</span></td></tr>';
+            }).join('');
+        } catch(e) { document.getElementById('noBookings').style.display = 'block'; }
+    }
+
+    async function loadOwnerInquiries() {
+        try {
+            var inqs = await apiFetch('/owner/inquiries');
+            var tbody = document.getElementById('ownerInquiryBody');
+            var noMsg = document.getElementById('noInquiries');
+            if (!inqs || inqs.length === 0) { tbody.innerHTML = ''; noMsg.style.display = 'block'; return; }
+            noMsg.style.display = 'none';
+            tbody.innerHTML = inqs.map(function(i) {
+                var statusClass = 'badge-' + (i.status || 'pending');
+                return '<tr><td>' + (i.name||'') + '</td><td>' + (i.pg_name||'') + '</td>' +
+                '<td>' + (i.phone||'') + '</td><td>' + (i.message||'') + '</td>' +
+                '<td><span class="status-badge ' + statusClass + '">' + (i.status||'pending') + '</span></td>' +
+                '<td>' + (i.created_at||'').split('T')[0] + '</td></tr>';
+            }).join('');
+        } catch(e) { document.getElementById('noInquiries').style.display = 'block'; }
+    }
+
+    function showAddPG() {
+        document.getElementById('pgModalTitle').textContent = 'Add New PG';
+        document.getElementById('pgForm').reset();
+        document.getElementById('pgEditId').value = '';
+        document.getElementById('pgModal').style.display = 'flex';
+    }
+
+    function closePGModal() { document.getElementById('pgModal').style.display = 'none'; }
+
+    async function editPG(id) {
+        try {
+            var pg = await apiFetch('/pgs/' + id);
+            document.getElementById('pgModalTitle').textContent = 'Edit PG';
+            document.getElementById('pgEditId').value = pg.id;
+            document.getElementById('pgName').value = pg.name || '';
+            document.getElementById('pgCity').value = pg.city || 'Hyderabad';
+            document.getElementById('pgArea').value = pg.area || '';
+            document.getElementById('pgAddress').value = pg.full_address || '';
+            document.getElementById('pgGender').value = pg.gender || 'unisex';
+            document.getElementById('pgType').value = pg.type || 'standard';
+            document.getElementById('pgPriceMin').value = pg.price_min || '';
+            document.getElementById('pgPriceMax').value = pg.price_max || '';
+            document.getElementById('pgDeposit').value = pg.deposit || '';
+            document.getElementById('pgTotalRooms').value = pg.total_rooms || '';
+            document.getElementById('pgAvailRooms').value = pg.available_rooms || '';
+            document.getElementById('pgFood').value = pg.food_type || 'veg';
+            document.getElementById('pgWifi').value = pg.wifi_speed || '';
+            document.getElementById('pgPhone').value = pg.phone || '';
+            document.getElementById('pgWhatsapp').value = pg.whatsapp || '';
+            document.getElementById('pgEmail').value = pg.email || '';
+            document.getElementById('pgDesc').value = pg.description || '';
+            document.getElementById('pgAmenities').value = (pg.amenities || []).join(', ');
+            document.getElementById('pgRules').value = (pg.house_rules || pg.houseRules || []).join(', ');
+            document.getElementById('pgModal').style.display = 'flex';
+        } catch(e) { alert('Could not load PG details'); }
+    }
+
+    async function savePG(e) {
+        e.preventDefault();
+        var editId = document.getElementById('pgEditId').value;
+        var body = {
+            name: document.getElementById('pgName').value,
+            city: document.getElementById('pgCity').value,
+            area: document.getElementById('pgArea').value,
+            full_address: document.getElementById('pgAddress').value,
+            gender: document.getElementById('pgGender').value,
+            type: document.getElementById('pgType').value,
+            price_min: parseInt(document.getElementById('pgPriceMin').value),
+            price_max: parseInt(document.getElementById('pgPriceMax').value),
+            deposit: parseInt(document.getElementById('pgDeposit').value) || 0,
+            total_rooms: parseInt(document.getElementById('pgTotalRooms').value) || 0,
+            available_rooms: parseInt(document.getElementById('pgAvailRooms').value) || 0,
+            food_type: document.getElementById('pgFood').value,
+            wifi_speed: document.getElementById('pgWifi').value,
+            phone: document.getElementById('pgPhone').value,
+            whatsapp: document.getElementById('pgWhatsapp').value,
+            email: document.getElementById('pgEmail').value,
+            description: document.getElementById('pgDesc').value,
+            amenities: document.getElementById('pgAmenities').value.split(',').map(function(s){return s.trim();}).filter(Boolean),
+            houseRules: document.getElementById('pgRules').value.split(',').map(function(s){return s.trim();}).filter(Boolean)
+        };
+        try {
+            if (editId) {
+                await apiFetch('/pgs/' + editId, { method: 'PUT', body: JSON.stringify(body) });
+                alert('PG updated successfully!');
+            } else {
+                await apiFetch('/pgs', { method: 'POST', body: JSON.stringify(body) });
+                alert('PG added successfully!');
+            }
+            closePGModal();
+            loadOwnerPGs();
+            loadOwnerStats();
+        } catch(e) { alert('Error: ' + e.message); }
+    }
+
+    async function deletePG(id) {
+        if (!confirm('Are you sure you want to delete this PG?')) return;
+        try {
+            await apiFetch('/pgs/' + id, { method: 'DELETE' });
+            loadOwnerPGs();
+            loadOwnerStats();
+        } catch(e) { alert('Error: ' + e.message); }
+    }
+
+    loadDashboard();
+    </script>
+</body>
+</html>
