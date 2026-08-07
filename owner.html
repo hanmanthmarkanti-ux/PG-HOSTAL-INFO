@@ -21,21 +21,65 @@
         </div>
     </nav>
 
-    <div id="ownerLogin" style="max-width:450px;margin:80px auto;padding:40px;background:white;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.1);text-align:center;">
-        <h2><i class="fas fa-building" style="color:var(--primary);"></i> Owner Login</h2>
-        <p style="color:#64748b;margin:12px 0 24px;">Login to manage your PG hostels</p>
-        <form onsubmit="ownerLogin(event)">
-            <div class="form-group" style="text-align:left;margin-bottom:16px;">
-                <label style="font-weight:600;display:block;margin-bottom:6px;">Email</label>
-                <input type="email" id="ownerEmail" required placeholder="your@email.com" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+    <div id="ownerLogin" style="max-width:480px;margin:60px auto;padding:40px;background:white;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.1);">
+        <!-- Login Form -->
+        <div id="ownerLoginForm">
+            <div style="text-align:center;margin-bottom:24px;">
+                <div style="width:70px;height:70px;border-radius:50%;background:var(--gradient-2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;color:white;"><i class="fas fa-building"></i></div>
+                <h2>Owner Login</h2>
+                <p style="color:#64748b;margin-top:8px;">Login to manage your PG hostels</p>
             </div>
-            <div class="form-group" style="text-align:left;margin-bottom:16px;">
-                <label style="font-weight:600;display:block;margin-bottom:6px;">Password</label>
-                <input type="password" id="ownerPass" required placeholder="Enter password" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+            <form onsubmit="ownerLogin(event)">
+                <div class="form-group" style="text-align:left;margin-bottom:16px;">
+                    <label style="font-weight:600;display:block;margin-bottom:6px;">Email</label>
+                    <input type="email" id="ownerEmail" required placeholder="your@email.com" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+                </div>
+                <div class="form-group" style="text-align:left;margin-bottom:16px;">
+                    <label style="font-weight:600;display:block;margin-bottom:6px;">Password</label>
+                    <input type="password" id="ownerPass" required placeholder="Enter password" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+                </div>
+                <button type="submit" class="btn-submit btn-full" style="padding:14px;font-size:1rem;">Login as Owner</button>
+            </form>
+            <p style="margin-top:20px;text-align:center;color:#64748b;font-size:0.9rem;">New owner? <a href="#" onclick="showOwnerRegister(); return false;" style="color:#f5576c;font-weight:600;">Register Your Hostel</a></p>
+            <p style="margin-top:8px;text-align:center;color:#64748b;font-size:0.85rem;">Are you a student? <a href="index.html" style="color:var(--primary);font-weight:600;">Find PGs</a></p>
+        </div>
+
+        <!-- Register Form -->
+        <div id="ownerRegisterForm" style="display:none;">
+            <div style="text-align:center;margin-bottom:24px;">
+                <div style="width:70px;height:70px;border-radius:50%;background:var(--gradient-2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;color:white;"><i class="fas fa-plus-circle"></i></div>
+                <h2>Register as Owner</h2>
+                <p style="color:#64748b;margin-top:8px;">List your PG hostel and connect with students</p>
             </div>
-            <button type="submit" class="btn-submit btn-full" style="padding:14px;font-size:1rem;">Login as Owner</button>
-        </form>
-        <p style="margin-top:16px;color:#64748b;font-size:0.9rem;">Not an owner? <a href="index.html" style="color:var(--primary);font-weight:600;">Register as Student</a></p>
+            <form onsubmit="ownerRegister(event)">
+                <div class="form-group" style="text-align:left;margin-bottom:14px;">
+                    <label style="font-weight:600;display:block;margin-bottom:6px;">Full Name *</label>
+                    <input type="text" id="regOwnerName" required placeholder="Your name" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+                </div>
+                <div class="form-group" style="text-align:left;margin-bottom:14px;">
+                    <label style="font-weight:600;display:block;margin-bottom:6px;">Email *</label>
+                    <input type="email" id="regOwnerEmail" required placeholder="your@email.com" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+                </div>
+                <div class="form-group" style="text-align:left;margin-bottom:14px;">
+                    <label style="font-weight:600;display:block;margin-bottom:6px;">Phone *</label>
+                    <input type="tel" id="regOwnerPhone" required placeholder="+91 XXXXX XXXXX" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+                </div>
+                <div class="form-group" style="text-align:left;margin-bottom:14px;">
+                    <label style="font-weight:600;display:block;margin-bottom:6px;">Password *</label>
+                    <input type="password" id="regOwnerPass" required minlength="6" placeholder="Min 6 characters" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+                </div>
+                <div class="form-group" style="text-align:left;margin-bottom:14px;">
+                    <label style="font-weight:600;display:block;margin-bottom:6px;">Hostel / Business Name</label>
+                    <input type="text" id="regOwnerBusiness" placeholder="e.g. Sunshine PG Hostels" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+                </div>
+                <div class="form-group" style="text-align:left;margin-bottom:14px;">
+                    <label style="font-weight:600;display:block;margin-bottom:6px;">Business Address</label>
+                    <input type="text" id="regOwnerAddress" placeholder="Hostel location" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;">
+                </div>
+                <button type="submit" class="btn-submit btn-full" style="padding:14px;font-size:1rem;background:linear-gradient(135deg,#f5576c,#f093fb);">Create Owner Account</button>
+            </form>
+            <p style="margin-top:20px;text-align:center;color:#64748b;font-size:0.9rem;">Already an owner? <a href="#" onclick="showOwnerLogin(); return false;" style="color:#f5576c;font-weight:600;">Login</a></p>
+        </div>
     </div>
 
     <div id="ownerDashboard" style="display:none;">
@@ -164,6 +208,38 @@
         localStorage.removeItem('pg_token');
         localStorage.removeItem('pg_user');
         location.reload();
+    }
+
+    function showOwnerRegister() {
+        document.getElementById('ownerLoginForm').style.display = 'none';
+        document.getElementById('ownerRegisterForm').style.display = 'block';
+    }
+
+    function showOwnerLogin() {
+        document.getElementById('ownerRegisterForm').style.display = 'none';
+        document.getElementById('ownerLoginForm').style.display = 'block';
+    }
+
+    async function ownerRegister(e) {
+        e.preventDefault();
+        try {
+            var data = await apiFetch('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: document.getElementById('regOwnerName').value,
+                    email: document.getElementById('regOwnerEmail').value,
+                    phone: document.getElementById('regOwnerPhone').value,
+                    password: document.getElementById('regOwnerPass').value,
+                    user_type: 'owner',
+                    business_name: document.getElementById('regOwnerBusiness').value,
+                    business_address: document.getElementById('regOwnerAddress').value
+                })
+            });
+            localStorage.setItem('pg_token', data.token);
+            localStorage.setItem('pg_user', JSON.stringify(data.user));
+            alert('Owner account created! Welcome, ' + data.user.name + '! You can now list your PG hostels.');
+            loadDashboard();
+        } catch(e) { alert(e.message); }
     }
 
     async function loadDashboard() {
