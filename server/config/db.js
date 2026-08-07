@@ -1,15 +1,10 @@
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+const Database = require('better-sqlite3');
+const path = require('path');
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'root',
-    database: process.env.DB_NAME || 'pg_hostel_db',
-    port: process.env.DB_PORT || 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const dbPath = path.join(__dirname, '..', 'pg_hostel.db');
+const db = new Database(dbPath);
 
-module.exports = pool;
+db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
+
+module.exports = db;
